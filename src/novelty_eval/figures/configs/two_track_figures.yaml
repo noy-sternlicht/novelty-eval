@@ -1,0 +1,91 @@
+# Wording for the two-track ablation figures (chart_two_track.py --config).
+#
+# Everything here is presentation only — it never changes a number. Keeping it
+# in a file rather than argv means the paper's phrasing is version-controlled
+# next to the figures it produces.
+
+# Row labels, keyed by canonical ablation name. Without an entry the ablation's
+# `description` from ablations.yaml is used.
+#
+# NOTE ON DIRECTION: most ablations remove or degrade something, so a positive
+# delta reads as "removing this did not hurt". `retrieval` is the exception —
+# it *adds* related-work access to the judge, so a positive delta there means
+# the added capability helped. Label it so a reader scanning the colour field
+# cannot mistake it for a removal, and say so in the caption.
+row_labels:
+  vague_criterion: "Vague novelty criterion"
+  no_criteria_prompt: "No criterion in prompt"
+  retrieval: "+ Related work (retrieval)"
+  low_judge_reasoning: "Reasoning effort = low"
+  unidirectional: "Unidirectional (A=B x 1)"
+  mec_k_1: "Single sample (k=1)"
+  convert_to_plan_form_pairwise_human: "Idea as research plan"
+  convert_to_plan_form_pairwise_vanilla: "Idea as research plan"
+  convert_to_plan_form_pointwise_human: "Idea as research plan"
+  convert_to_plan_form_pointwise_vanilla: "Idea as research plan"
+
+# Rename a track without changing the --track argument.
+track_titles: {}
+#  Human-only: "Human vs. human"
+
+# Which metric each setup's heatmap shows. The two setups score different
+# things, so they get separate keys. The metric is not printed on the figure —
+# it goes in the output filename, and the caption has to name it.
+#
+# Available (filtered merge data):
+#   pairwise:  pairwise_accuracy, pairwise_accuracy_no_ties,
+#              pairwise_accuracy_strict, n_ties, support, cost_usd
+#   pointwise: f1_macro, f1_pos, f1_neg, accuracy, precision_pos/neg,
+#              recall_pos/neg, support, cost_usd
+metrics:
+  pairwise: pairwise_accuracy_strict
+  pointwise: recall_neg
+
+# Colourbar / axis label per metric key. Unused while `colorbar: false`.
+metric_labels: {}
+#  pairwise_accuracy: "$\\Delta$ pairwise accuracy (pts)"
+#  f1_macro: "$\\Delta$ macro-F1 (pts)"
+
+# Every cell prints its own numbers, so the colour scale is redundant encoding
+# and the footnote repeats what the caption says. Both are off; the LaTeX
+# caption has to carry the metric, the scale direction and the meaning of `*`.
+colorbar: false
+footnote: ""
+
+# What the two axes are. The same model names appear as judges here and as
+# generators elsewhere, so the columns need naming even though the rows read
+# as ablations on their own.
+row_axis_label: "Ablation"
+col_axis_label: "Judge model"
+
+# Judge column order, left to right. Default is whatever order the merge data
+# lists; naming them here fixes it across regenerations.
+models:
+  - claude-sonnet-4-5
+  - claude-opus-4-5
+  - claude-opus-4-6
+  - gpt-5.1
+  - gpt-5.2
+  - gpt-5.4
+
+# Shorter judge names for the column headers. Long names force the rotated
+# labels wider and eat horizontal space.
+model_labels:
+  claude-opus-4-5: "opus-4-5"
+  claude-opus-4-6: "opus-4-6"
+  claude-sonnet-4-5: "sonnet-4-5"
+
+# Extra name equivalences, for per-track variants the trailing-token rule
+# (_human / _vanilla / _hvh / _ai) cannot relate on its own. Keyed by row key.
+row_aliases: {}
+#  some_ablation: [some_ablation_variant_a, some_ablation_variant_b]
+
+
+rows:
+  - vague_criterion
+  - no_criteria_prompt
+  - retrieval
+  - low_judge_reasoning
+#  - unidirectional
+#  - mec_k_1
+  - convert_to_plan_form_pairwise_human

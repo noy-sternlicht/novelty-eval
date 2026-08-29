@@ -1,0 +1,21 @@
+# Papers that consistently trigger safety/content-filter errors in LLM judges.
+# Adding a title here prevents the paper from appearing in newly generated test
+# instances (filtered in save_clean_novelty_dataset) AND automatically excludes
+# it from evaluation metrics at merge time (merge_ablation_runs.py reads this
+# file to derive exclude indices directly from test instance YAML files).
+#
+# Titles are matched case-insensitively.
+blocked_titles:
+  - "GeneBreaker: Jailbreak Attacks against DNA Language Models with Pathogenicity Guidance"
+  - "On the Reasoning Abilities of Masked Diffusion Language Models"
+  - "Ransomware Detection on Android: Performance and Energy"
+  - "Fairness-Aware Multi-view Evidential Learning with Adaptive Prior"
+  - "Differentially and Integrally Attentive Convolutional-based Photoplethysmography Signal Quality Classification"
+  - "MXSens: Sensitivity-Aware Mixed-Precision Quantization for Efficient LLM Inference"
+  - "Divide, Harmonize, Then Conquer It: Shooting Multi-Commodity Flow Problems with Multimodal Language Models"
+  - "DFCA: Decentralized Federated Clustering Algorithm"
+  - "Mean-Field Neural Differential Equations: A Game-Theoretic Approach to Sequence Prediction"
+  - "Polynomial-Time Reasoning at the Edge of NP"
+  - "Learning Semi-Structured Sparsity for LLMs via Shared and Context-Aware Hypernetwork"
+  - "TESSAR: Geometry-Aware Active Regression via Dynamic Voronoi Tessellation"
+  - "TRUST – Transformer-Driven U-Net for Sparse Target Recovery"

@@ -1,0 +1,48 @@
+# Main-paper figure: Human-Only vs Human+Generated (LLM).
+# Generated from plot_eval_comparison_example.yaml (Human-Only data matches the
+# "Current" rows of merge_hvh/merged_ablation_report_filtered.md).
+
+color_palette:
+  - '#fce1ba'  # 1. Bright Peach-Cream (The Highlight)
+  - '#e29578'  # 2. Muted Terra Cotta (Warm contrast to the purples)
+  - '#b5838d'  # 3. Dusty Rose (Bridge)
+  - '#8367c7'  # 4. Vivid Lavender (The "Pop" bar)
+  - '#564e91'  # 5. Deep Indigo
+  - '#2e2a5e'  # 6. Dark Navy
+  - '#12102e'  # 7. Midnight Black (The Anchor)
+
+output_dir: ./output/novelty_eval_benchmarking/main
+
+pointwise:
+  Human-Only:
+    gpt-5.1:           { f1_macro: 0.7520, f1_pos: 0.7628, f1_neg: 0.7413 }
+    gpt-5.2:           { f1_macro: 0.6444, f1_pos: 0.5575, f1_neg: 0.7312 }
+    gpt-5.4:           { f1_macro: 0.6660, f1_pos: 0.5923, f1_neg: 0.7397 }
+    claude-sonnet-4-5: { f1_macro: 0.6073, f1_pos: 0.5023, f1_neg: 0.7124 }
+    claude-opus-4-5:   { f1_macro: 0.7068, f1_pos: 0.6813, f1_neg: 0.7323 }
+    claude-opus-4-6:   { f1_macro: 0.8055, f1_pos: 0.8153, f1_neg: 0.7958 }
+
+  Human+Generated (LLM):
+    gpt-5.1:           { f1_macro: 0.7499, f1_pos: 0.7442, f1_neg: 0.7556 }
+    gpt-5.2:           { f1_macro: 0.6450, f1_pos: 0.5413, f1_neg: 0.7487 }
+    gpt-5.4:           { f1_macro: 0.7054, f1_pos: 0.6250, f1_neg: 0.7857 }
+    claude-sonnet-4-5: { f1_macro: 0.6913, f1_pos: 0.6071, f1_neg: 0.7755 }
+    claude-opus-4-5:   { f1_macro: 0.7844, f1_pos: 0.7529, f1_neg: 0.8159 }
+    claude-opus-4-6:   { f1_macro: 0.8888, f1_pos: 0.8794, f1_neg: 0.8982 }
+
+pairwise:
+  Human-Only:
+    gpt-5.1:           { pairwise_accuracy: 0.8701, pairwise_accuracy_strict: 0.8377, pairwise_accuracy_no_ties: 0.8958 }
+    gpt-5.2:           { pairwise_accuracy: 0.8539, pairwise_accuracy_strict: 0.8377, pairwise_accuracy_no_ties: 0.8658 }
+    gpt-5.4:           { pairwise_accuracy: 0.8539, pairwise_accuracy_strict: 0.8312, pairwise_accuracy_no_ties: 0.8707 }
+    claude-sonnet-4-5: { pairwise_accuracy: 0.8019, pairwise_accuracy_strict: 0.7403, pairwise_accuracy_no_ties: 0.8444 }
+    claude-opus-4-5:   { pairwise_accuracy: 0.8149, pairwise_accuracy_strict: 0.7922, pairwise_accuracy_no_ties: 0.8299 }
+    claude-opus-4-6:   { pairwise_accuracy: 0.8279, pairwise_accuracy_strict: 0.8247, pairwise_accuracy_no_ties: 0.8301 }
+
+  Human+Generated (LLM):
+    gpt-5.1:           { pairwise_accuracy: 0.6656, pairwise_accuracy_strict: 0.6299, pairwise_accuracy_no_ties: 0.6783 }
+    gpt-5.2:           { pairwise_accuracy: 0.7727, pairwise_accuracy_strict: 0.7597, pairwise_accuracy_no_ties: 0.7800 }
+    gpt-5.4:           { pairwise_accuracy: 0.8052, pairwise_accuracy_strict: 0.7792, pairwise_accuracy_no_ties: 0.8219 }
+    claude-sonnet-4-5: { pairwise_accuracy: 0.5714, pairwise_accuracy_strict: 0.3961, pairwise_accuracy_no_ties: 0.6100 }
+    claude-opus-4-5:   { pairwise_accuracy: 0.7208, pairwise_accuracy_strict: 0.6299, pairwise_accuracy_no_ties: 0.7698 }
+    claude-opus-4-6:   { pairwise_accuracy: 0.8799, pairwise_accuracy_strict: 0.8636, pairwise_accuracy_no_ties: 0.8926 }

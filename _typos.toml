@@ -1,0 +1,20 @@
+# Typo-checker allowlist (crate-ci/typos, run via pre-commit).
+#
+# Only for identifiers we do not control: names fixed by an upstream API,
+# vendored dependency, or environment contract, where "correcting" the spelling
+# would break the integration.
+
+[default.extend-identifiers]
+# Env var read by the vendored CoI-Agent searcher that the baselines inherit.
+# Misspelled upstream; renaming it here would stop the key being picked up.
+SEMENTIC_SEARCH_API_KEY = "SEMENTIC_SEARCH_API_KEY"
+
+[files]
+extend-exclude = [
+    # Verbatim in-context examples shipped with the Scideator baseline: real
+    # paper abstracts carrying OCR artifacts ("reﬁne-ment", "Sur") and quoted
+    # source text. These are prompt inputs reproduced byte-for-byte from the
+    # upstream reference — correcting the spelling would change what the model
+    # is shown.
+    "**/scideator/incontext_examples/**",
+]

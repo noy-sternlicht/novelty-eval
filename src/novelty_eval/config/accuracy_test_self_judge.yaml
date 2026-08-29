@@ -1,0 +1,46 @@
+# ---------------------------------------------------------------------------
+# accuracy_test_self_judge.yaml — Score the web-search judge's OWN verdict.
+#
+# This does NOT call an LLM. It reads the novelty verdict that the web-search
+# judge-with-papers prompt produced at retrieval time (stored under
+# `self_judgement` in the retrieval cache) and runs it through the exact same
+# pointwise metrics path as every other judge, so the result is directly
+# comparable.
+#
+# Prerequisite — build the cache first with the web-search novelty judge:
+#   run ./scripts/run_web_search_novelty_judge.sh (--mode submit/collect for batch)
+#   using src/novelty_eval/retrieval/web_search_novelty_judge.yaml.
+#   Point retrieval_cache_file below at the resulting cache.
+#
+# Run with:
+#   python -m novelty_eval.run_benchmark \
+#       --config src/novelty_eval/config/accuracy_test_self_judge.yaml
+# ---------------------------------------------------------------------------
+
+# Same pointwise instances file used to benchmark the other judges (must carry `label`).
+test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml"
+
+# Retrieval cache built by the web-search novelty judge (keyed by pointwise instance id).
+retrieval_cache_file: "output/.../retrieval_cache.json"
+
+output_file: "accuracy_report.txt"
+
+n: 1
+
+test_mode: "pointwise"
+
+# Read the cached verdict instead of running a judge model.
+judge_backend: "cached_self_judgement"
+
+# llm_engine is unused by this backend (no LLM call) but kept for report provenance.
+llm_engine: "gpt-5.5-pro"
+
+# Keep aligned with the cutoff used when the cache/verdict was produced.
+cutoff_date: "2025-03-01"
+
+output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output/accuracy_test_artifacts"
+
+# Remove (or set null) for a full run.
+num_instances: 1
+
+use_batch_api: false

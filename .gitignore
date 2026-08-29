@@ -1,2 +1,24 @@
 .idea/
 PLAN.md
+.DS_Store
+**/__pycache__/
+.venv/
+.venv-baselines/
+.pytest_cache/
+secrets.toml
+
+# Run artifacts
+logs/
+output/*
+reports/
+accuracy_test_artifacts/
+src/novelty_eval/accuracy_test_artifacts
+src/novelty_eval/comparative_eval_results
+src/novelty_eval/benchmark_data/iclr_data
+src/novelty_eval/benchmark_data/iclr_test_instances
+*/comparison_report.md
+
+# Locally generated configs
+src/novelty_eval/benchmark_data/dirs_config.yaml
+src/novelty_eval/config/accuracy_sweep_config.yaml
+src/novelty_eval/ablation/configs/merge/merge_config.yaml

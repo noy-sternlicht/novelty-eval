@@ -1,0 +1,24 @@
+# Compare accuracy results across ablation sweeps.
+# Each entry needs a 'path' (relative to repo root or absolute) and a 'label'.
+# Sweeps are compared left-to-right (first = baseline, subsequent = new runs).
+
+sweeps:
+#  - path: output/ablation_sweeps/20260518_161430   # ← older sweep (baseline)
+#    label: "baseline vanilla (w sentence)"
+#  - path: output/ablation_sweeps/20260523_121740   # ← newer sweep
+#    label: "May-23 (w/o sentence)"
+#  - path: output/ablation_sweeps/20260519_114951
+#    label: "baseline hvh (w sentence)"
+#  - path: output/ablation_sweeps/20260430_100138
+#    label: "w sentence"
+#  - path: output/ablation_sweeps/20260523_135720
+#    label: "w/o sentence"
+
+#  - path: output/ablation_sweeps/20260525_120237
+#    label: "New retrieval"
+#  - path: output/ablation_sweeps/20260523_154314
+#    label: "Old retrieval"
+   - path: output/ablation_sweeps/20260525_141908
+     label: "new-retrieval pairwise"
+   - path: output/ablation_sweeps/20260416_101832
+     label: "old-retrieval pairwise"

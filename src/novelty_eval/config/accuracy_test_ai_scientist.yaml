@@ -1,0 +1,83 @@
+# ---------------------------------------------------------------------------
+# accuracy_test_ai_scientist.yaml — run the AI-Scientist novelty checker as a
+# judge backend, scored through the same pointwise metrics path as every other
+# judge so the numbers are directly comparable.
+#
+# Run with (NOT `python -m`, see the note at the bottom):
+#
+#   export PYTHONPATH=$PWD/src
+#   export SECRETS=$PWD/secrets.toml
+#   export OUTPUT_DIR=$PWD/output
+#   ./.venv/bin/python src/novelty_eval/run_benchmark.py \
+#       --config src/novelty_eval/config/accuracy_test_ai_scientist.yaml
+#
+# AI-Scientist does its OWN Semantic Scholar retrieval — it ignores
+# retrieval_cache_file entirely, so none is set here. Each instance runs up to
+# max_num_iterations rounds of: propose a query -> search S2 -> decide
+# novel / not novel / search again.
+# ---------------------------------------------------------------------------
+
+# Pointwise instances (must carry `label`). Same file the other judges are scored on.
+#test_inputs: "output/iclr_test_instances/ablation/pointwise-hvh_current/20260501_123408/iclr_pointwise_instances.yaml" # pointwise-hvh
+test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml" # pointwise-vanilla
+
+output_file: "accuracy_report.txt"
+
+test_mode: "pointwise"
+
+# Route the judge through baselines/registry.py instead of the in-house judge.
+judge_backend: "baseline"
+baseline: "ai_scientist"
+
+# Passed verbatim to AIScientistRunner.run_pointwise.
+#   max_num_iterations — upstream default is 10. Lowering it caps cost per instance,
+#                        but rounds that run out without a verdict count as no
+#                        prediction (injected as wrong), so it raises the failure rate.
+#   use_retrieval      — feed the S2 results back into the next round's prompt.
+#   resume_dir         — adapter-level, not passed to the runner. Point it at an
+#                        interrupted run's artifacts dir (the parent of
+#                        run_pointwise_0/) to replay instances that already
+#                        reached a verdict instead of paying for them again:
+#                          resume_dir: "output/accuracy_test_artifacts/2026-08-15_09-00-00"
+baseline_kwargs:
+  max_num_iterations: 10
+  use_retrieval: true
+
+# Number of runs (each writes its own run_pointwise_N/scores.json).
+n: 1
+
+# PILOT: start with 1 instance, then raise to ~20-30 before a full run.
+# Remove or set to null to process all 313.
+num_instances: null
+
+# Keep this aligned with the in-house judge's engine — the comparison is only
+# fair if both arms use the same model.
+llm_engine: "claude-opus-4-6"
+reasoning_effort: "high"
+
+# Restricts what the baseline's own S2 searches may return, so a paper cannot
+# retrieve itself or anything published after the benchmark's horizon.
+# Matches the value used across the retrieval and web-search configs.
+cutoff_date: "2025-03-01"
+
+# Concurrency over instances. The real ceiling is Semantic Scholar's ~1 RPS
+# search limit (enforced globally by S2_SEARCH_LIMITER in src/semantic_scholar.py),
+# and AI-Scientist issues one search per round, so raising this well above ~8
+# mostly just queues behind that limiter.
+max_workers: 4
+
+# Baselines are sync only — the iterative ones need each round's response before
+# they can build the next request. Setting this true raises a clear error.
+use_batch_api: false
+
+output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output"
+
+# ---------------------------------------------------------------------------
+# Why not `python -m novelty_eval.run_benchmark`
+# ---------------------------------------------------------------------------
+# With `-m` from the repo root, sys.path[0] is "" so `src.cost_tracker` becomes
+# importable. utils.py prefers that path while run_benchmark.py imports the bare
+# `cost_tracker`, giving two different module objects and two different
+# GLOBAL_COST_TRACKER singletons — costs get recorded into one and read from the
+# other, and cost_report.json comes out as 0 calls / $0.00.
+# Invoking by script path keeps both on the same module.

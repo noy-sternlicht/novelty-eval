@@ -1,0 +1,72 @@
+# ---------------------------------------------------------------------------
+# accuracy_test_scideator.yaml — smoke test for the Scideator novelty checker,
+# scored through the same pointwise metrics path as every other judge.
+#
+# MUST be run with the baselines interpreter, not .venv:
+#
+#   export PYTHONPATH=$PWD/src
+#   export SECRETS=$PWD/secrets.toml
+#   export OUTPUT_DIR=$PWD/output
+#   ./.venv-baselines/bin/python src/novelty_eval/run_benchmark.py \
+#       --config src/novelty_eval/config/accuracy_test_scideator.yaml
+#
+# .venv cannot run this: Scideator's Specter2 embedder needs `adapters`, which
+# conflicts with `pylate`. See requirements-baselines.txt.
+#
+# Scideator does its OWN retrieval — keyword search, snippet search, Specter2
+# embedding + cosine filtering, then a RankGPT rerank — before judging. It
+# ignores retrieval_cache_file entirely, so none is set.
+# ---------------------------------------------------------------------------
+
+# Pointwise instances (must carry `label`). Same file the other judges use.
+#test_inputs: "output/iclr_test_instances/ablation/pointwise-hvh_current/20260501_123408/iclr_pointwise_instances.yaml" # pointwise-hvh
+test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml" # pointwise-vanilla
+
+output_file: "accuracy_report.txt"
+
+test_mode: "pointwise"
+
+judge_backend: "baseline"
+baseline: "scideator"
+
+# Passed verbatim to ScideatorRunner.run_pointwise. These are upstream's
+# config.yml defaults, so the smoke exercises the real pipeline rather than a
+# trimmed one.
+baseline_kwargs:
+  use_retrieval: true
+  novelty_check_prompt: "relaxed"        # "relaxed" | "less-relaxed"
+  novelty_check_examples: "relaxed"      # picks the in-context example file
+  novelty_check_topk: 10                 # papers shown to the judge
+  query_retrieval_method: "keyword+title+snippet"
+  rankgpt_variant: "priority"            # "base" | "purpose" | "priority"
+  ablation: false                        # true also runs snippet-only/keyword-only/no-RankGPT
+  # reranker to a different model from the verdict model.
+  # resume_dir: adapter-level, not passed to the runner. Point it at an
+  # interrupted run's artifacts dir (the parent of run_pointwise_0/) to replay
+  # instances that already reached a verdict instead of paying for them again.
+  # resume_dir: "output/accuracy_test_artifacts/2026-08-15_09-00-00"
+  rankgpt_model: "gpt-5.4-mini"  # reranker model, if different from llm_engine
+  rankgpt_effort: "none"
+n: 1
+
+num_instances: null
+
+# Used for the verdict, the keyword/facet extraction and the RankGPT rerank
+# unless rankgpt_model overrides the last. Keep aligned with the in-house judge.
+llm_engine: "gpt-5.4"
+reasoning_effort: "high"
+
+# Restricts Scideator's own S2 searches so a paper cannot retrieve itself or
+# anything past the benchmark horizon. Matches the other configs.
+cutoff_date: "2025-03-01"
+
+# One instance, so this is irrelevant here. Note for later: S2 search is capped
+# globally at ~1 RPS, and Scideator issues one search per keyword plus one per
+# title plus a snippet search, so it is far more retrieval-heavy per instance
+# than AI-Scientist.
+max_workers: 1
+
+# Baselines are sync only.
+use_batch_api: false
+
+output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output"

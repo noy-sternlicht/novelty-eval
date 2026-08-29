@@ -1,0 +1,20 @@
+files:
+  - path: output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/iclr_test_instances.yaml
+    label: baseline
+#  - path: output/iclr_test_instances/ablation/pairwise_gpt_5.4_backbone/20260402_111329/iclr_test_instances.yaml
+#    label: GPT-5.4
+#  - path: output/iclr_test_instances/ablation/pairwise_claude-sonnet-4-6_backbone/20260402_115848/iclr_test_instances.yaml
+#    label: Claude-Sonnet-4.6
+#  - path: output/iclr_test_instances/ablation/c10_gpt_backbone/20260401_111556/iclr_test_instances.yaml
+#    label: GPT-5.1
+#  - path: output/iclr_test_instances/ablation/pairwise_gpt_5.2_backbone/20260401_160138/iclr_test_instances.yaml
+#    label: GPT-5.2
+#  - path: output/iclr_test_instances/ablation/pairwise_claude-opus-4-5_backbone/20260402_122041/iclr_test_instances.yaml
+#    label: Claude-Opus-4.5
+#  - path: output/iclr_test_instances/ablation/pairwise_claude-haiku-4-5_backbone/20260402_130215/iclr_test_instances.yaml
+#    label: Claude-Haiku-4.5
+
+  - path: output/iclr_test_instances/pairwise_data/20260517_160407/manipulated/iclr_test_instances.yaml
+    label: llm-generated negatives
+
+output: compare_positives.html
