@@ -2,56 +2,25 @@
 # (novelty_eval/baselines) in their own environment.
 #
 # Why separate: Scideator's Specter2 embedder needs `adapters`, which pins
-# transformers~=4.57.6, while `pylate` pins transformers<=4.56.2. No release of
-# adapters satisfies both. The two never share a process — run_benchmark's
-# import chain pulls in no pylate/ColBERT code, and pylate is used only by
-# src/author_selection — so they are split rather than reconciled.
+# transformers~=4.57.6. Keeping it out of the main environment also keeps torch
+# and the HuggingFace stack out of it, since nothing else imports them.
 #
-# Removed vs requirements.txt: pylate, fast_plaid, fastkmeans (the ColBERT
-# stack; nothing under src/ imports them directly).
-# Added: adapters, nest_asyncio.
+# scripts/cluster/ runs against this environment (see _common.sh), which is why
+# preflight.py's GPU check can import torch.
 #
 #   python3.12 -m venv .venv-baselines
 #   .venv-baselines/bin/pip install -r requirements-baselines.txt
 
+# Everything the main environment needs, since the baselines import the shared
+# modules (utils, cost_tracker, ...) and run through run_benchmark.
+-r requirements.txt
+
+# Specter2 embedding + reranking
 accelerate
 adapters
-aiohttp
-anthropic>=0.40.0
-anyio
-autogen-agentchat==0.7.2
-autogen-core==0.7.2
-autogen-ext==0.7.2
-cloudpickle
-colorama
-datasets
-httpx
-huggingface_hub
-Jinja2
-jsonref
-jsonschema
-litellm
-matplotlib
-nest_asyncio
-numpy
-openai>=1.0.0
-openreview-py
-packaging
-pandas
-pillow
-psutil
-pydantic>=2.0.0
-python-dotenv
-PyYAML
-regex
-requests
-scikit-learn
-scipy
-sentence-transformers
-sqlitedict
-tiktoken
-toml
 torch
-tqdm
 transformers
-ujson
+scikit-learn
+
+# Semantic Scholar client used by the baselines
+nest_asyncio
