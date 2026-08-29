@@ -458,178 +458,6 @@ def _manipulate_paper(paper, template, model_name, return_plan=False, debug_log:
     return cache_key, idea_content
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Pipeline-based negative generation
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-
-def _selected_plan_to_paper(selected_plan: dict, area: str, sample_idx: int) -> dict:
-    """Convert a single selected_plan from a pipeline run into a paper dict."""
-    abstract_text = selected_plan.get("abstract", "")
-    if not abstract_text:
-        # Structured-plan protocol (round-robin): format fields with bold labels
-        # to match the format produced by the ICLR-side manipulation templates.
-        parts = [
-            f"**{field}**: {selected_plan[field]}"
-            for field in ("context", "purpose", "mechanism", "evaluation")
-            if selected_plan.get(field)
-        ]
-        abstract_text = "\n".join(parts)
-
-    return {
-        "abstract": abstract_text,
-        "title": selected_plan.get("id", f"Generated-{area}-{sample_idx}"),
-        "reviews": [],
-        "_generated": True,
-    }
-
-
-async def _generate_all_negatives(
-        areas_with_counts: dict,
-        pipeline_config: dict,
-        output_base_dir: str,
-        max_parallel: int = 1,
-        area_seeded_tasks: dict | None = None,
-) -> dict:
-    """
-    Generate synthetic negative papers for every area using the pipeline.
-
-    Delegates to ``pipeline.prepare_sample`` (author selection + representation)
-    and ``brainstorming.main.run_conversation`` (brainstorming with convergence)
-    — the same functions used by the main pipeline.
-
-    Each pipeline run produces exactly one idea (the selected plan after the
-    internal convergence protocol).  The pipeline config is used as-is.
-
-    All individual pipeline samples across all areas are launched as independent
-    async tasks bounded by a shared semaphore, giving full parallelism.
-
-    Args:
-        areas_with_counts: Dict mapping area name → number of negatives needed.
-        pipeline_config: The pipeline TOML config dict (used as-is).
-        output_base_dir: Base directory for intermediate pipeline artefacts.
-        max_parallel: Max concurrent pipeline runs.
-        area_seeded_tasks: Optional dict mapping area → list of (pos_title, seed_ctx)
-            tuples, one per negative run.  When provided (fine-grained seed
-            ablation), each pipeline run uses the corresponding seed_ctx as
-            TestCase.context instead of the coarse area string, and the returned
-            negative paper is tagged with _positive_title for downstream pairing.
-
-    Returns:
-        Dict mapping area → list of synthetic paper dicts.
-    """
-    import torch
-    from pipeline import prepare_sample
-    from brainstorming.main import run_conversation
-    from data_models import TestCase
-
-    # Each pipeline run yields exactly 1 idea (after convergence),
-    # so we need exactly num_needed runs per area.
-    sample_tasks = []
-    for area, num_needed in areas_with_counts.items():
-        for idx in range(num_needed):
-            sample_tasks.append((area, idx))
-
-    LOGGER.info(f"Scheduling {len(sample_tasks)} pipeline runs across "
-                f"{len(areas_with_counts)} areas (max {max_parallel} parallel)")
-
-    # Setup GPU management (same pattern as pipeline.run_pipeline)
-    num_gpus = torch.cuda.device_count()
-    if num_gpus == 0:
-        num_gpus = 1
-    gpu_queue = asyncio.Queue()
-    for i in range(num_gpus):
-        await gpu_queue.put(i)
-    gpu_semaphore = asyncio.Semaphore(num_gpus)
-    brainstorm_semaphore = asyncio.Semaphore(max_parallel)
-
-    async def _run_one(area, sample_idx, process_executor):
-        """Run one full pipeline sample and return (area, paper)."""
-        safe_area = area.replace(" ", "_").replace("/", "_")
-        area_base_dir = os.path.join(output_base_dir, "generated_negatives", safe_area)
-        summaries_dir = os.path.join(output_base_dir, "summaries", safe_area)
-        os.makedirs(area_base_dir, exist_ok=True)
-        os.makedirs(summaries_dir, exist_ok=True)
-
-        # Resolve seed: fine-grained context or coarse area string (default)
-        if area_seeded_tasks and area in area_seeded_tasks:
-            pos_title, seed_context = area_seeded_tasks[area][sample_idx]
-        else:
-            pos_title, seed_context = None, area
-
-        input_data = TestCase(
-            case_id=f"gen_{safe_area}",
-            context=seed_context,
-            metadata={"source": "generated_negative", "area": area, "seed_context": seed_context},
-        )
-
-        # Phase 1: Author selection + representation (via pipeline.prepare_sample)
-        sample_context = await prepare_sample(
-            input_data=input_data,
-            sample_index=sample_idx,
-            current_base_dir=area_base_dir,
-            master_config=pipeline_config,
-            summaries_dir=summaries_dir,
-            gpu_semaphore=gpu_semaphore,
-            gpu_queue=gpu_queue,
-            process_executor=process_executor,
-        )
-
-        # Phase 2: Brainstorming + convergence (via brainstorming.main.run_conversation)
-        async with brainstorm_semaphore:
-            LOGGER.info(f"[generate_negatives][{area}][sample {sample_idx}] Running brainstorming")
-            brainstorming_config = {
-                "context": sample_context["context"],
-                "author_agents_path": sample_context["agents_pickle_path"],
-                "out_dir": sample_context["brainstorming_out_dir"],
-                "conversation": pipeline_config["brainstorming"],
-            }
-            brainstorming_results = await run_conversation(brainstorming_config, debug_mode=False)
-
-        selected_plan = brainstorming_results.get("selected_plan")
-        if not selected_plan:
-            LOGGER.warning(f"[generate_negatives][{area}][sample {sample_idx}] "
-                           "No selected plan returned — skipping")
-            return area, None
-
-        # In the fine-grained seed case the agents were not asked to generate a
-        # context field, so inject it from the seed so both the positive and
-        # negative are presented with identical four-field representations.
-        if pos_title and "context" not in selected_plan:
-            selected_plan = {**selected_plan, "context": seed_context}
-
-        paper = _selected_plan_to_paper(selected_plan, area, sample_idx)
-        if pos_title:
-            paper["_positive_title"] = pos_title
-
-        divergence_log = brainstorming_results.get("divergence_log", [])
-        selected_id = selected_plan.get("id")
-        for entry in divergence_log:
-            rp = (entry.get("action") or {}).get("research_plan") or {}
-            if rp.get("id") == selected_id:
-                paper["turn_number"] = entry["turn_number"]
-                break
-
-        return area, paper
-
-    # Run all samples in parallel with a shared process executor
-    area_papers: dict = {area: [] for area in areas_with_counts}
-    init_max_workers = num_gpus if pipeline_config["author_selection"].get("retrieve_specific_authors", True) else max_parallel
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=init_max_workers) as process_executor:
-        coros = [_run_one(area, idx, process_executor) for area, idx in sample_tasks]
-
-        for fut in tqdm(asyncio.as_completed(coros), total=len(coros), desc="Generating negatives"):
-            area, paper = await fut
-            if paper is not None:
-                area_papers[area].append(paper)
-                LOGGER.info(f"[{area}] collected {len(area_papers[area])} / "
-                            f"{areas_with_counts[area]} negatives")
-
-    return area_papers
-
-
 async def _generate_llm_negatives(
         areas_with_counts: dict,
         model_name: str,
@@ -641,8 +469,8 @@ async def _generate_llm_negatives(
     Generate synthetic negative papers for each area by prompting an LLM
     directly with a configurable Jinja2 template — no multi-agent pipeline.
 
-    Each call produces exactly one idea per slot (same contract as
-    _generate_all_negatives).  Ideas are returned as plain abstract text.
+    Each call produces exactly one idea per slot.  Ideas are returned as plain
+    abstract text.
 
     Args:
         areas_with_counts: Dict mapping area name → number of negatives needed.
@@ -1787,8 +1615,6 @@ def _load_config(config_path: str):
         strict=False,
         strictness=None,
         manipulation_prompt=None,
-        generate_negatives=False,
-        pipeline_config=None,
         llm_negatives=False,
         llm_negatives_model=None,
         llm_negatives_prompt=None,
@@ -1803,7 +1629,6 @@ def _load_config(config_path: str):
         pointwise=False,
         pointwise_balance=False,
         pointwise_shuffle=True,
-        seed_granularity="coarse",
         derive_pointwise_from_pairwise=None,
         pre_built_manipulation_cache_yaml=None,
         rebuild_negatives_from_yaml=None,
@@ -1972,8 +1797,8 @@ def generate_pointwise_data_summary(args, pointwise_instances, output_dir):
 def _print_dry_run_report(args, clean_data_list):
     """Simulate instance selection and print expected counts without any LLM calls."""
     is_pointwise = getattr(args, 'pointwise', False)
-    use_negatives = args.generate_negatives or args.llm_negatives
-    neg_type = "LLM" if args.llm_negatives else "pipeline" if args.generate_negatives else None
+    use_negatives = args.llm_negatives
+    neg_type = "LLM" if args.llm_negatives else None
 
     lines = ["", "=" * 64, "  DRY RUN — no LLM calls will be made", "=" * 64, ""]
 
@@ -2159,28 +1984,15 @@ async def _rebuild_negatives_mode(args, debug_log: ManipulationDebugLog):
     _attach_run_log(output_dir)
 
     # ── Step 2: Generate new negatives ───────────────────────────────────────
-    if args.llm_negatives:
-        total_needed = sum(areas_with_counts.values())
-        LOGGER.info(f"Generating {total_needed} LLM negatives (max {args.max_workers} parallel)")
-        generated_negatives_map = await _generate_llm_negatives(
-            areas_with_counts=areas_with_counts,
-            model_name=args.llm_negatives_model,
-            prompt_template_path=args.llm_negatives_prompt,
-            max_parallel=args.max_workers,
-            reasoning_effort=getattr(args, 'llm_negatives_reasoning_effort', None),
-        )
-    else:
-        timestamp_gen = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        gen_output_dir = os.path.join(args.output_dir, f"{timestamp_gen}_generation")
-        os.makedirs(gen_output_dir, exist_ok=True)
-        total_needed = sum(areas_with_counts.values())
-        LOGGER.info(f"Generating {total_needed} pipeline negatives (max {args.max_workers} parallel)")
-        generated_negatives_map = await _generate_all_negatives(
-            areas_with_counts=areas_with_counts,
-            pipeline_config=args.pipeline_config,
-            output_base_dir=gen_output_dir,
-            max_parallel=args.max_workers,
-        )
+    total_needed = sum(areas_with_counts.values())
+    LOGGER.info(f"Generating {total_needed} LLM negatives (max {args.max_workers} parallel)")
+    generated_negatives_map = await _generate_llm_negatives(
+        areas_with_counts=areas_with_counts,
+        model_name=args.llm_negatives_model,
+        prompt_template_path=args.llm_negatives_prompt,
+        max_parallel=args.max_workers,
+        reasoning_effort=getattr(args, 'llm_negatives_reasoning_effort', None),
+    )
 
     # ── Step 3: Re-assemble instances ─────────────────────────────────────────
     area_neg_cursors = {area: 0 for area in areas_with_counts}
@@ -2445,15 +2257,6 @@ async def async_main():
     if args.strictness and args.strictness not in ('all', 'majority'):
         LOGGER.error(f"Invalid strictness value '{args.strictness}'. Choose from: 'all', 'majority'")
         return
-    if args.generate_negatives:
-        if not args.pipeline_config or not isinstance(args.pipeline_config, dict):
-            LOGGER.error("generate_negatives requires pipeline_config to be set "
-                         "(with author_selection, author_representation, and brainstorming sections)")
-            return
-        for required_key in ("author_selection", "author_representation", "brainstorming"):
-            if required_key not in args.pipeline_config:
-                LOGGER.error(f"pipeline_config is missing required section: '{required_key}'")
-                return
     if args.llm_negatives:
         if not args.llm_negatives_model:
             LOGGER.error("llm_negatives requires llm_negatives_model to be set")
@@ -2493,9 +2296,9 @@ async def async_main():
     os.makedirs(output_dir, exist_ok=True)
     _attach_run_log(output_dir)
 
-    # Generate negatives via pipeline or direct LLM if requested
+    # Generate negatives by prompting an LLM directly, if requested
     generated_negatives_map = {}
-    use_negatives = args.generate_negatives or args.llm_negatives
+    use_negatives = args.llm_negatives
     if use_negatives:
         # Calculate how many negatives each area needs.
         # Pointwise: 1 negative per positive paper.
@@ -2535,90 +2338,16 @@ async def async_main():
             LOGGER.info(f"max_instances={args.max_instances}: capped negatives generation to "
                         f"{sum(areas_with_counts.values())} negatives across {len(areas_with_counts)} areas.")
 
-        if args.llm_negatives:
-            total_needed = sum(areas_with_counts.values())
-            LOGGER.info(f"Generating {total_needed} LLM negatives across {len(areas_with_counts)} areas "
-                        f"(max {args.max_workers} parallel)")
-            generated_negatives_map = await _generate_llm_negatives(
-                areas_with_counts=areas_with_counts,
-                model_name=args.llm_negatives_model,
-                prompt_template_path=args.llm_negatives_prompt,
-                max_parallel=args.max_workers,
-                reasoning_effort=getattr(args, 'llm_negatives_reasoning_effort', None),
-            )
-        else:
-            pipeline_config = args.pipeline_config
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            gen_output_dir = os.path.join(args.output_dir, f"{timestamp}_generation")
-            os.makedirs(gen_output_dir, exist_ok=True)
-
-            # ── Fine-grained seed — pre-build manipulation cache and extract seeds ──
-            # This runs before negative generation so that each pipeline run receives
-            # the context extracted from its paired positive paper's abstract.
-            # The same LLM call populates pre_built_manipulation_cache to avoid a
-            # second manipulation pass inside create_test_instances.
-            area_seeded_tasks = None
-            seed_granularity = getattr(args, "seed_granularity", "coarse")
-            if seed_granularity == "fine" and args.model_name and not getattr(args, "use_abstract_only", False):
-                LOGGER.info("Pre-building manipulation cache and extracting fine-grained seeds...")
-                seed_template = _load_manipulation_template(args.manipulation_prompt)
-                area_seeded_tasks = {}
-                if pre_built_manipulation_cache is None:
-                    pre_built_manipulation_cache = {}
-
-                # Collect all positive papers for areas that will generate negatives
-                area_to_positives: dict = {}
-                for clean_data in clean_data_list:
-                    for area, data in clean_data.items():
-                        if area in areas_with_counts:
-                            area_to_positives.setdefault(area, []).extend(data.get("top_papers", []))
-
-                def _manipulate_and_seed(area: str, paper: dict):
-                    cache_key, idea_content, plan_dict = _manipulate_paper(
-                        paper, seed_template, args.model_name, return_plan=True,
-                        debug_log=debug_log,
-                    )
-                    context_seed = (plan_dict.get("context") or "").strip() or area
-                    if not plan_dict:
-                        LOGGER.warning(
-                            f"No plan dict for '{paper.get('title')}' in area '{area}'; "
-                            "falling back to coarse area seed."
-                        )
-                    return area, paper.get("title", cache_key), cache_key, idea_content, context_seed
-
-                seed_inputs = [
-                    (area, paper)
-                    for area, papers in area_to_positives.items()
-                    for paper in papers
-                ]
-                with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
-                    futures = {
-                        executor.submit(_manipulate_and_seed, area, paper): (area, paper)
-                        for area, paper in seed_inputs
-                    }
-                    for future in tqdm(as_completed(futures), total=len(futures),
-                                       desc="Pre-building manipulation cache"):
-                        area, pos_title, cache_key, idea_content, context_seed = future.result()
-                        pre_built_manipulation_cache[cache_key] = idea_content
-                        # One entry per negative needed: num_bottom_papers per positive
-                        for _ in range(args.num_bottom_papers):
-                            area_seeded_tasks.setdefault(area, []).append((pos_title, context_seed))
-
-                LOGGER.info(
-                    f"Pre-built manipulation cache for {len(pre_built_manipulation_cache)} papers "
-                    f"across {len(area_seeded_tasks)} areas."
-                )
-
-            total_needed = sum(areas_with_counts.values())
-            LOGGER.info(f"Generating {total_needed} negatives across {len(areas_with_counts)} areas "
-                        f"(max {args.max_workers} parallel)")
-            generated_negatives_map = await _generate_all_negatives(
-                areas_with_counts=areas_with_counts,
-                pipeline_config=pipeline_config,
-                output_base_dir=gen_output_dir,
-                max_parallel=args.max_workers,
-                area_seeded_tasks=area_seeded_tasks,
-            )
+        total_needed = sum(areas_with_counts.values())
+        LOGGER.info(f"Generating {total_needed} LLM negatives across {len(areas_with_counts)} areas "
+                    f"(max {args.max_workers} parallel)")
+        generated_negatives_map = await _generate_llm_negatives(
+            areas_with_counts=areas_with_counts,
+            model_name=args.llm_negatives_model,
+            prompt_template_path=args.llm_negatives_prompt,
+            max_parallel=args.max_workers,
+            reasoning_effort=getattr(args, 'llm_negatives_reasoning_effort', None),
+        )
 
     # When negatives were capped to max_instances, filter clean_data_list to only
     # the areas we actually generated negatives for, so create_test_instances

@@ -47,7 +47,6 @@ ABLATIONS=(
 #    unidirectional
 #    mec_k_1
 #    low_judge_reasoning
-#    plan_format
 #    boring_negatives
 #    retrieval
 )

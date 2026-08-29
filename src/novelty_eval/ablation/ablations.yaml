@@ -22,7 +22,7 @@
 #                 Settings are merged recursively: Base -> Parent(s) -> Current.
 #   instance:     Overrides for create_benchmark_instances.py.
 #                 - Use a dictionary for specific overrides.
-#                 - Use a string (e.g. "plan_format") to reuse instances from
+#                 - Use a string (e.g. "boring_negatives") to reuse instances from
 #                   another experiment in the same track.
 #                 - Use null to reuse the track baseline instances.
 #   sweep:        Overrides for run_accuracy_sweep.py.
@@ -71,7 +71,6 @@ defaults:
     max_workers: 50
     mix_topics: false
     strictness: "majority"
-    generate_negatives: true
     max_instances: null
     md_report_batch_size: 20
     min_pos_rating: 6.0
@@ -82,28 +81,6 @@ defaults:
     max_pos_contribution: null
     min_neg_contribution: null
     max_neg_contribution: 2.0
-    pipeline_config:
-      author_selection:
-        retrieve_specific_authors: false
-        team_size: 2
-        use_seed_author: false
-        min_papers_per_expert: 2
-        embedding_batch_size: 1024
-        max_papers_retrieved: 10
-        encoder_model: "lightonai/Reason-ModernColBERT"
-        keyword_engine: "gpt-5.2"
-      author_representation:
-        backbone_model: "claude-sonnet-4-5"
-        model_provider: "anthropic"
-        architecture: "simple"
-        use_tools: false
-        tools: ["own_papers_search"]
-      brainstorming:
-        max_turns: 2
-        divergence_protocol: "round-robin-abstract"
-        convergence_protocol: "random"
-        explicit_tool_instructions: false
-        include_citations_in_response: false
 
   retrieval:
     llm_engine: "claude-opus-4-6"
@@ -323,79 +300,6 @@ ablations:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_comparative.jinja2"
 
   # --- Idea format ablations ---
-  plan_format:
-    description: "Idea is in plan format (context, purpose, methods, evaluation)."
-    before_description: "Idea is in abstract form (results/eval data stripped)."
-    group: idea_format
-    legacy_names: [c2a]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      manipulation_prompt: *extract_plan
-      pipeline_config:
-        brainstorming:
-          divergence_protocol: "round-robin"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  verbatim_plan_format:
-    description: "Idea is in plan format (context, purpose, methods, evaluation). Older plan extraction prompt (verbatim) for ICLR ideas."
-    before_description: "Idea is in abstract form (results/eval data stripped)."
-    group: idea_format
-    legacy_names: [c2b]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      manipulation_prompt: *extract_plan_verbatim
-      pipeline_config:
-        brainstorming:
-          divergence_protocol: "round-robin"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  no_eval_field:
-    description: "Idea is a plan with no evaluation field (context, purpose, methods)."
-    before_description: "Idea is in abstract form (results/eval data stripped)."
-    group: idea_format
-    legacy_names: [c7_no_eval]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance: "plan_format"
-    preprocess: "strip_eval"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  old_task_desc:
-    description: "Idea is in plan format (context, purpose, methods, evaluation). Generations use an older version of the round-robin prompt."
-    before_description: "Idea is in abstract form (results/eval data stripped). Newer version of the round-roin prompt."
-    group: idea_format
-    legacy_names: [c9_old_task_desc]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      manipulation_prompt: *extract_plan_verbatim
-      pipeline_config:
-        brainstorming:
-          divergence_protocol: "round-robin-old"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  fine_grained_seed:
-    description: "Idea is in plan format (context, purpose, methods, evaluation). Fine-grained seed — negatives seeded from extracted 'context' of positive abstract"
-    before_description: "Idea is in abstract form (results/eval data stripped). Seeds negatives from the general topic only (no fine-grained abstract context)."
-    group: idea_format
-    legacy_names: [c11_fine_seed]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      manipulation_prompt: *extract_plan_verbatim
-      seed_granularity: "fine"
-      pipeline_config:
-        brainstorming:
-          divergence_protocol: "round-robin-no-context"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
   boring_negatives:
     description: "Negatives are boring ideas generated by prompting an LLM directly (no pipeline)"
     before_description: "Negatives generated via the full multi-agent brainstorming pipeline."
@@ -568,92 +472,6 @@ ablations:
     sweep:
       test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134934/iclr_pointwise_instances.yaml"
 
-  gpt_5.2_backbone:
-    description: "GPT-5.2 backbone model for agents"
-    before_description: "Baseline backbone is claude-sonnet-4-5."
-    group: backbone
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      pipeline_config:
-        author_representation:
-          backbone_model: "gpt-5.2"
-          model_provider: "openai"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  gpt_5.4_backbone:
-    description: "GPT-5.4 backbone model for agents"
-    before_description: "Baseline backbone is claude-sonnet-4-5."
-    group: backbone
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      pipeline_config:
-        author_representation:
-          backbone_model: "gpt-5.4"
-          model_provider: "openai"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  claude-sonnet-4-6_backbone:
-    description: "Claude-sonnet-4-6 backbone model for agents"
-    before_description: "Baseline backbone is claude-sonnet-4-5."
-    group: backbone
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      pipeline_config:
-        author_representation:
-          backbone_model: "claude-sonnet-4-6"
-          model_provider: "anthropic"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  claude-opus-4-5_backbone:
-    description: "Claude-opus-4-5 backbone model for agents"
-    before_description: "Baseline backbone is claude-sonnet-4-5."
-    group: backbone
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      pipeline_config:
-        author_representation:
-          backbone_model: "claude-opus-4-5"
-          model_provider: "anthropic"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  claude-opus-4-6_backbone:
-    description: "Claude-opus-4-6 backbone model for agents"
-    before_description: "Baseline backbone is claude-sonnet-4-5."
-    group: backbone
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      pipeline_config:
-        author_representation:
-          backbone_model: "claude-opus-4-6"
-          model_provider: "anthropic"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  claude-haiku-4-5_backbone:
-    description: "Claude-haiku-4-5 backbone model for agents"
-    before_description: "Baseline backbone is claude-sonnet-4-5."
-    group: backbone
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      pipeline_config:
-        author_representation:
-          backbone_model: "claude-haiku-4-5"
-          model_provider: "anthropic"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-
-  # --- Combined Ablations ----#
   gpt_5.1_backbone_retrieval_pairwise_vanilla:
     description: "gpt_5.1_backbone+retrieval"
     before_description: "Baseline backbone is claude-sonnet-4-5; evaluator has no access to related work."
@@ -722,27 +540,6 @@ ablations:
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/opus-4-5_backbone/pointwise/retrieval_cache.json"
 
-#  all_bad:
-#    description: "All-bad: vague criterion + no-reasoning + mec_k=1 + no-position-debiasing + old prompt + GPT-5.1 backbone + fine seed"
-#    before_description: "Baseline uses all best settings: specific criterion, bidirectional (mec_k=3), high reasoning, round-robin-abstract, claude-sonnet-4-5 backbone, coarse seeding."
-#    group: combined
-#    legacy_names: [all]
-#    tracks: [pairwise, ranking]
-#    openai_only: true
-#    inherit_from:
-#      - vague_criterion
-#      - unidirectional
-#      - mec_k_1
-#      - no_reasoning
-#      - no_eval_field
-#      - fine_grained_seed
-#      - gpt_5.1_backbone
-#    instance:
-#      pipeline_config:
-#        brainstorming:
-#          divergence_protocol: "round-robin-no-context-old"
-#    sweep:
-#      test_inputs: "__PLACEHOLDER__"
 
 
 #  # --- Old Instances Track ---

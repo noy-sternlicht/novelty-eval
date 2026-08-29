@@ -48,44 +48,6 @@ strictness: majority
 max_instances: null
 
 
-# ── Generated negatives ──────────────────────────────────────────────────────
-# When true, negative (bottom) papers are *not* drawn from the ICLR dataset.
-# Instead, the pipeline (author selection → author representation →
-# brainstorming) is invoked for each research area to produce synthetic
-# abstracts that serve as negatives.
-# Requires pipeline_config to be filled in below.
-generate_negatives: true
-
-# Pipeline configuration used when generate_negatives is true.
-# These mirror the [author_selection], [author_representation], and
-# [brainstorming] sections from the main pipeline TOML config.
-# Set to null when generate_negatives is false.
-pipeline_config:
-  author_selection:
-    retrieve_specific_authors: false
-    team_size: 2
-    use_seed_author: false
-    min_papers_per_expert: 2
-    embedding_batch_size: 1024
-    max_papers_retrieved: 10
-    encoder_model: "lightonai/Reason-ModernColBERT"
-    keyword_engine: "gpt-5.2"
-
-  author_representation:
-    backbone_model: "claude-sonnet-4-5"
-    model_provider: "anthropic"   # options: "openai" | "anthropic"
-    architecture: "simple"
-    use_tools: false
-    tools:
-      - "own_papers_search"
-
-  brainstorming:
-    max_turns: 2
-    divergence_protocol: "round-robin-abstract"
-    convergence_protocol: "random"
-    explicit_tool_instructions: false
-    include_citations_in_response: false
-
 # ── Markdown report batching ──────────────────────────────────────────────────
 # Split the markdown report into multiple numbered files (e.g. _001.md, _002.md)
 # so large datasets remain renderable in IDEs.
