@@ -3,14 +3,9 @@
 [![Arxiv](https://img.shields.io/badge/Arxiv-TODO-red?style=flat-square&logo=arxiv&logoColor=white)](TODO)
 [![Python Versions](https://img.shields.io/badge/Python-3.12-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](TODO)
-[![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Data-Here-yellow?style=flat-square)](TODO)
+[![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Data-Here-yellow?style=flat-square)](https://huggingface.co/datasets/noystl/novelty-judge-bench)
 
-TODO: short abstract-style paragraph. Automated ideation systems are judged on novelty,
-so a reliable automatic novelty judge is a bottleneck in their development — yet these
-judges are rarely validated, and what validation exists uses human-authored papers rather
-than the machine-generated ideas the judges are deployed on. We build a benchmark
-automatically from peer review, covering both regimes, and find current judges to be
-brittle.
+TODO: short abstract-style paragraph. 
 
 <p align="center">
   <img src="TODO-overview.png" alt="Overview" />
@@ -33,11 +28,6 @@ brittle.
   * [Citation](#citation)
   * [Authors](#authors)
 <!-- TOC -->
-
-## Updates
-
-* **TODO-DATE**: Paper accepted / preprint out.
-* **TODO-DATE**: Benchmark released on Hugging Face.
 
 ## Getting started
 
@@ -104,13 +94,25 @@ Each setup is instantiated in both evaluation formats, giving four files:
 * `pairwise.yaml` — 154 pairs; which of the two ideas is more novel.
 * `pointwise.yaml` — 300 (Human-Only) / 308 (Human+Generated) ideas; is this idea novel.
 * `pairwise_plan.yaml`, `pointwise_plan.yaml` — the same instances with each idea rewritten
-  into plan form (context, purpose, mechanism, evaluation); the idea-format ablation.
+  into a two-field plan (purpose, mechanism); the idea-format ablation.
 
 `data/human-plus-generated/backbone-*/` regenerates `D_l` with other ideation backbones
 (`gpt-5.1`, `gpt-5.4`, `opus-4-5`) and is used in the negatives-source experiment.
 
 Each instance holds the idea(s) to judge and the ground-truth label. See
 [`data/README.md`](data/README.md) for the exact fields and provenance.
+
+The same instances are released on the Hub as
+[noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench)
+(TODO: currently private), one config per file above:
+
+```python
+from datasets import load_dataset
+
+ds = load_dataset("noystl/novelty-judge-bench", "human-plus-generated_pointwise", split="test")
+```
+
+`scripts/hf/upload.sh` rebuilds that release from `data/` and pushes it.
 
 ## Evaluating a judge
 

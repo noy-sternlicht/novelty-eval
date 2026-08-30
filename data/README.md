@@ -24,5 +24,5 @@ human-plus-generated/           D_h unchanged; D_l = ideas from a plain LLM idea
     pointwise.yaml
 ```
 
-`_plan` variants hold the same ideas rewritten into plan form (context, purpose,
-mechanism, evaluation) and are the idea-format ablation.
+`_plan` variants hold the same ideas rewritten into a two-field plan (purpose,
+mechanism) and are the idea-format ablation.
