@@ -2,15 +2,15 @@
 # accuracy_test_scideator.yaml — smoke test for the Scideator novelty checker,
 # scored through the same pointwise metrics path as every other judge.
 #
-# MUST be run with the baselines interpreter, not .venv:
+# MUST be run with the baselines interpreter, not myenv:
 #
 #   export PYTHONPATH=$PWD/src
 #   export SECRETS=$PWD/secrets.toml
 #   export OUTPUT_DIR=$PWD/output
-#   ./.venv-baselines/bin/python src/novelty_eval/run_benchmark.py \
+#   ./myenv-baselines/bin/python src/novelty_eval/run_benchmark.py \
 #       --config src/novelty_eval/config/accuracy_test_scideator.yaml
 #
-# .venv cannot run this: Scideator's Specter2 embedder needs `adapters`, which
+# myenv cannot run this: Scideator's Specter2 embedder needs `adapters`, which
 # conflicts with `pylate`. See requirements-baselines.txt.
 #
 # Scideator does its OWN retrieval — keyword search, snippet search, Specter2
@@ -19,8 +19,7 @@
 # ---------------------------------------------------------------------------
 
 # Pointwise instances (must carry `label`). Same file the other judges use.
-#test_inputs: "data/human-only/pointwise.yaml" # pointwise-hvh
-test_inputs: "data/human-plus-generated/pointwise.yaml" # pointwise-vanilla
+test_inputs: "data/human-plus-generated/pointwise.yaml" 
 
 output_file: "accuracy_report.txt"
 
@@ -40,7 +39,6 @@ baseline_kwargs:
   query_retrieval_method: "keyword+title+snippet"
   rankgpt_variant: "priority"            # "base" | "purpose" | "priority"
   ablation: false                        # true also runs snippet-only/keyword-only/no-RankGPT
-  # reranker to a different model from the verdict model.
   # resume_dir: adapter-level, not passed to the runner. Point it at an
   # interrupted run's artifacts dir (the parent of run_pointwise_0/) to replay
   # instances that already reached a verdict instead of paying for them again.
@@ -60,10 +58,7 @@ reasoning_effort: "high"
 # anything past the benchmark horizon. Matches the other configs.
 cutoff_date: "2025-03-01"
 
-# One instance, so this is irrelevant here. Note for later: S2 search is capped
-# globally at ~1 RPS, and Scideator issues one search per keyword plus one per
-# title plus a snippet search, so it is far more retrieval-heavy per instance
-# than AI-Scientist.
+
 max_workers: 1
 
 # Baselines are sync only.

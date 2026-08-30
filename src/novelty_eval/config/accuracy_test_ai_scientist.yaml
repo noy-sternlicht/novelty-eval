@@ -8,7 +8,7 @@
 #   export PYTHONPATH=$PWD/src
 #   export SECRETS=$PWD/secrets.toml
 #   export OUTPUT_DIR=$PWD/output
-#   ./.venv/bin/python src/novelty_eval/run_benchmark.py \
+#   ./myenv/bin/python src/novelty_eval/run_benchmark.py \
 #       --config src/novelty_eval/config/accuracy_test_ai_scientist.yaml
 #
 # AI-Scientist does its OWN Semantic Scholar retrieval — it ignores
@@ -18,8 +18,8 @@
 # ---------------------------------------------------------------------------
 
 # Pointwise instances (must carry `label`). Same file the other judges are scored on.
-#test_inputs: "data/human-only/pointwise.yaml" # pointwise-hvh
-test_inputs: "data/human-plus-generated/pointwise.yaml" # pointwise-vanilla
+
+test_inputs: "data/human-plus-generated/pointwise.yaml" 
 
 output_file: "accuracy_report.txt"
 
@@ -46,12 +46,10 @@ baseline_kwargs:
 # Number of runs (each writes its own run_pointwise_N/scores.json).
 n: 1
 
-# PILOT: start with 1 instance, then raise to ~20-30 before a full run.
-# Remove or set to null to process all 313.
+
 num_instances: null
 
-# Keep this aligned with the in-house judge's engine — the comparison is only
-# fair if both arms use the same model.
+
 llm_engine: "claude-opus-4-6"
 reasoning_effort: "high"
 
@@ -60,24 +58,11 @@ reasoning_effort: "high"
 # Matches the value used across the retrieval and web-search configs.
 cutoff_date: "2025-03-01"
 
-# Concurrency over instances. The real ceiling is Semantic Scholar's ~1 RPS
-# search limit (enforced globally by S2_SEARCH_LIMITER in src/semantic_scholar.py),
-# and AI-Scientist issues one search per round, so raising this well above ~8
-# mostly just queues behind that limiter.
+# Concurrency over instances. 
 max_workers: 4
 
-# Baselines are sync only — the iterative ones need each round's response before
-# they can build the next request. Setting this true raises a clear error.
+# Baselines are sync only 
 use_batch_api: false
 
 output_dir: "output"
 
-# ---------------------------------------------------------------------------
-# Why not `python -m novelty_eval.run_benchmark`
-# ---------------------------------------------------------------------------
-# With `-m` from the repo root, sys.path[0] is "" so `src.cost_tracker` becomes
-# importable. utils.py prefers that path while run_benchmark.py imports the bare
-# `cost_tracker`, giving two different module objects and two different
-# GLOBAL_COST_TRACKER singletons — costs get recorded into one and read from the
-# other, and cost_report.json comes out as 0 calls / $0.00.
-# Invoking by script path keeps both on the same module.

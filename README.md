@@ -116,27 +116,20 @@ The same pipeline that produced these files can be re-run on a newer conference 
 
 ## Judge Evaluation
 
-A judge run takes one benchmark file from [data/](data/) and one backbone model, and reports how well that judge separates `D_h` from `D_l`. The configs in [config/](src/novelty_eval/config/) pin the instance paths of our own runs, so point them at a released file with `--set`:
+[example_eval.yaml](src/novelty_eval/config/example_eval.yaml) runs a single judge over a single released benchmark file, under the baseline configuration of the paper: a verdict plus reasoning, three samples per decision, high reasoning effort, no tools and no related work. 
 
 ```bash
 python src/novelty_eval/run_benchmark.py \
-    --config src/novelty_eval/config/accuracy_test.yaml \
-    --set test_inputs=data/human-only/pairwise.yaml \
-    --set test_mode=pairwise \
-    --set llm_engine=claude-opus-4-6 \
-    --set reasoning_effort=high \
-    --set output_dir=output \
-    --set num_instances=5
+    --config src/novelty_eval/config/example_eval.yaml
 ```
 
-`num_instances=5` caps the run at five instances — enough to check the setup end to end for a few cents. Drop it to evaluate the whole file. The pointwise format is the same command with the pointwise file and mode:
+Comparing several judges, or the same judge under a controlled change, is a *sweep*: [example_sweep.yaml](src/novelty_eval/config/example_sweep.yaml) sets a shared `base_config` and one entry per run. Each entry becomes its own judge run, and the results are collected into a cross-config `sweep_comparison_report.md`.
 
 ```bash
-    --set test_inputs=data/human-only/pointwise.yaml \
-    --set test_mode=pointwise
+python src/novelty_eval/run_benchmark_sweep.py \
+    --config src/novelty_eval/config/example_sweep.yaml \
+    --parallel --skip-on-error
 ```
-
-
 
 ## Citation
 
