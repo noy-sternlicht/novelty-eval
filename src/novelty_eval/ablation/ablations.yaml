@@ -124,28 +124,28 @@ tracks:
       num_bottom_papers: 1
     sweep:
       test_mode: "pairwise"
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/iclr_test_instances.yaml"
+      test_inputs: "data/human-plus-generated/pairwise.yaml"
 
   pairwise-vanilla-ai-plan:
     instance:
       num_bottom_papers: 1
     sweep:
       test_mode: "pairwise"
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/manually-manipulated/iclr_test_instances.yaml"
+      test_inputs: "data/human-plus-generated/pairwise_plan.yaml"
 
   pairwise-hvh:
     instance:
       num_bottom_papers: 1
     sweep:
       test_mode: "pairwise"
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260429_221238/manipulated/iclr_test_instances.yaml"
+      test_inputs: "data/human-only/pairwise.yaml"
 
   pairwise-hvh-plan:
     instance:
       num_bottom_papers: 1
     sweep:
       test_mode: "pairwise"
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260429_221238/manipulated/manually-manipulated/iclr_test_instances.yaml"
+      test_inputs: "data/human-only/pairwise_plan.yaml"
 
   ranking:
     instance:
@@ -167,14 +167,14 @@ tracks:
       derive_pointwise_from_track: "pairwise-hvh"
     sweep:
       test_mode: "pointwise"
-      test_inputs: "output/iclr_test_instances/ablation/pointwise-hvh_current/20260501_123408/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-only/pointwise.yaml"
 
   pointwise-vanilla-ai:
     instance:
       num_bottom_papers: 1
     sweep:
       test_mode: "pointwise"
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/pointwise.yaml"
 
   old_data:
     instance: null  # Reuse existing instances for old data
@@ -343,7 +343,7 @@ ablations:
     tracks: [ pairwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/manually-manipulated/iclr_test_instances.yaml"
+      test_inputs: "data/human-plus-generated/pairwise_plan.yaml"
 
   convert_to_plan_form_pairwise_human:
     description: "Convert existing ideas to plan format using a post-processing step before the sweep."
@@ -352,7 +352,7 @@ ablations:
     tracks: [ pairwise-hvh ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260429_221238/manipulated/manually-manipulated/iclr_test_instances.yaml"
+      test_inputs: "data/human-only/pairwise_plan.yaml"
 
   convert_to_plan_form_pointwise_human:
     description: "Convert existing ideas to plan format using a post-processing step before the sweep."
@@ -361,7 +361,7 @@ ablations:
     tracks: [ pointwise-hvh ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260609_162054/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-only/pointwise_plan.yaml"
 
   convert_to_plan_form_pointwise_vanilla:
     description: "Convert existing ideas to plan format using a post-processing step before the sweep."
@@ -372,7 +372,7 @@ ablations:
     instance:
       derive_pointwise_from_track: "pairwise"
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260519_163806/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/pointwise_plan.yaml"
 
   # --- Retrieval ablations ---
   retrieval:
@@ -423,7 +423,7 @@ ablations:
     tracks: [pairwise-vanilla-ai]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_131054/benchmark_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.1/pairwise.yaml"
 
   gpt_5.4_backbone_pairwise_vanilla:
     description: "GPT-5.4 backbone"
@@ -432,7 +432,7 @@ ablations:
     tracks: [ pairwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_130201/benchmark_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.4/pairwise.yaml"
 
   opus-4-5_backbone_pairwise_vanilla:
     description: "Opus-4-5 backbone"
@@ -441,7 +441,7 @@ ablations:
     tracks: [ pairwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_125138/benchmark_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-opus-4-5/pairwise.yaml"
 
 
   gpt_5.1_backbone_pointwise_vanilla:
@@ -451,7 +451,7 @@ ablations:
     tracks: [ pointwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134638/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.1/pointwise.yaml"
 
   gpt_5.4_backbone_pointwise_vanilla:
     description: "GPT-5.4 backbone"
@@ -460,7 +460,7 @@ ablations:
     tracks: [ pointwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134819/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.4/pointwise.yaml"
 
   opus-4-5_backbone_pointwise_vanilla:
     description: "Opus-4-5 backbone"
@@ -469,7 +469,7 @@ ablations:
     tracks: [ pointwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134934/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-opus-4-5/pointwise.yaml"
 
   gpt_5.1_backbone_retrieval_pairwise_vanilla:
     description: "gpt_5.1_backbone+retrieval"
@@ -478,7 +478,7 @@ ablations:
     tracks: [ pairwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_131054/benchmark_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.1/pairwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/gpt_5.1_backbone/pairwise/retrieval_cache.json"
 
@@ -489,7 +489,7 @@ ablations:
     tracks: [ pointwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134638/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.1/pointwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/gpt_5.1_backbone/pointwise/retrieval_cache.json"
 
@@ -502,7 +502,7 @@ ablations:
     tracks: [pairwise-vanilla-ai]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_130201/benchmark_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.4/pairwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/gpt_5.4_backbone/pairwise/retrieval_cache.json"
 
@@ -513,7 +513,7 @@ ablations:
     tracks: [pointwise-vanilla-ai]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134819/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-gpt-5.4/pointwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/gpt_5.4_backbone/pointwise/retrieval_cache.json"
 
@@ -524,7 +524,7 @@ ablations:
     tracks: [ pairwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_125138/benchmark_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-opus-4-5/pairwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/opus-4-5_backbone/pairwise/retrieval_cache.json"
 
@@ -535,7 +535,7 @@ ablations:
     tracks: [ pointwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
     sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260531_134934/iclr_pointwise_instances.yaml"
+      test_inputs: "data/human-plus-generated/backbone-opus-4-5/pointwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/opus-4-5_backbone/pointwise/retrieval_cache.json"
 

@@ -31,10 +31,10 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 # --- what to report ------------------------------------------------------- #
 # Instance files, per track (must be the ones the sweeps below actually ran on).
 INSTANCES = {
-    "hvh": "output/iclr_test_instances/pairwise_data/20260429_221238/manipulated/iclr_test_instances.yaml",
-    "vanilla-ai": "output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/iclr_test_instances.yaml",
-    "hvh-plan": "output/iclr_test_instances/pairwise_data/20260429_221238/manipulated/manually-manipulated/iclr_test_instances.yaml",
-    "vanilla-ai-plan": "output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/manually-manipulated/iclr_test_instances.yaml",
+    "hvh": "data/human-only/pairwise.yaml",
+    "vanilla-ai": "data/human-plus-generated/pairwise.yaml",
+    "hvh-plan": "data/human-only/pairwise_plan.yaml",
+    "vanilla-ai-plan": "data/human-plus-generated/pairwise_plan.yaml",
 }
 
 # One sweep dir per track.  These four are contemporaneous (2026-07-24) and each

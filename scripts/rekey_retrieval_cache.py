@@ -21,7 +21,7 @@ entries (keyed by old problem_id → old idea_id) no longer match the new YAML's
 Usage:
     python3 scripts/rekey_retrieval_cache.py \\
         --old-cache output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/retrieval_cache.json \\
-        --new-yaml  output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/iclr_test_instances.yaml \\
+        --new-yaml  data/human-plus-generated/pairwise.yaml \\
         --output    output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/retrieval_cache.json
 """
 

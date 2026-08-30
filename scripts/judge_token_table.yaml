@@ -21,12 +21,12 @@ groups:
   - label: Human+AI
     artifacts: output/ablation_sweeps/merge_ai_researcher_vanilla_ai-plan/artifacts
     prefix: pairwise-vanilla-ai-plan_
-    instances: output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/manually-manipulated/iclr_test_instances.yaml
+    instances: data/human-plus-generated/pairwise_plan.yaml
 
   - label: Human-only
     artifacts: output/ablation_sweeps/merge_ai_researcher_hvh-plan/artifacts
     prefix: pairwise-hvh-plan_
-    instances: output/iclr_test_instances/pairwise_data/20260429_221238/manipulated/manually-manipulated/iclr_test_instances.yaml
+    instances: data/human-only/pairwise_plan.yaml
 
 # Non-standardized (abstract-format) equivalents:
 #

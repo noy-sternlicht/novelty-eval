@@ -10,7 +10,7 @@
 #       --config src/novelty_eval/config/accuracy_test_web_search.yaml
 # ---------------------------------------------------------------------------
 
-test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml"
+test_inputs: "data/human-plus-generated/pointwise.yaml"
 
 output_file: "accuracy_report.txt"
 

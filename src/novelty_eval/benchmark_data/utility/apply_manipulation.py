@@ -233,7 +233,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Apply an abstract manipulation prompt to all ideas in a dataset YAML."
     )
-    parser.add_argument("--dataset", default="output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/iclr_test_instances.yaml", help="Path to input YAML dataset")
+    parser.add_argument("--dataset", default="data/human-plus-generated/pairwise.yaml", help="Path to input YAML dataset")
     parser.add_argument(
         "--template",
         default=None,

@@ -19,8 +19,8 @@
 # ---------------------------------------------------------------------------
 
 # Pointwise instances (must carry `label`). Same file the other judges use.
-#test_inputs: "output/iclr_test_instances/ablation/pointwise-hvh_current/20260501_123408/iclr_pointwise_instances.yaml" # pointwise-hvh
-test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml" # pointwise-vanilla
+#test_inputs: "data/human-only/pointwise.yaml" # pointwise-hvh
+test_inputs: "data/human-plus-generated/pointwise.yaml" # pointwise-vanilla
 
 output_file: "accuracy_report.txt"
 

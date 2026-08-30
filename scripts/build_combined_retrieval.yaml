@@ -39,13 +39,13 @@ retrieval:
 
 datasets:
   - label: "gpt_5.1_backbone"
-    pairwise: "output/iclr_test_instances/pairwise_data/20260531_131054/benchmark_instances.yaml"
-    pointwise: "output/iclr_test_instances/pairwise_data/20260531_134638/iclr_pointwise_instances.yaml"
+    pairwise: "data/human-plus-generated/backbone-gpt-5.1/pairwise.yaml"
+    pointwise: "data/human-plus-generated/backbone-gpt-5.1/pointwise.yaml"
 
   - label: "gpt_5.4_backbone"
-    pairwise: "output/iclr_test_instances/pairwise_data/20260531_130201/benchmark_instances.yaml"
-    pointwise: "output/iclr_test_instances/pairwise_data/20260531_134819/iclr_pointwise_instances.yaml"
+    pairwise: "data/human-plus-generated/backbone-gpt-5.4/pairwise.yaml"
+    pointwise: "data/human-plus-generated/backbone-gpt-5.4/pointwise.yaml"
 
   - label: "opus-4-5_backbone"
-    pairwise: "output/iclr_test_instances/pairwise_data/20260531_125138/benchmark_instances.yaml"
-    pointwise: "output/iclr_test_instances/pairwise_data/20260531_134934/iclr_pointwise_instances.yaml"
+    pairwise: "data/human-plus-generated/backbone-opus-4-5/pairwise.yaml"
+    pointwise: "data/human-plus-generated/backbone-opus-4-5/pointwise.yaml"

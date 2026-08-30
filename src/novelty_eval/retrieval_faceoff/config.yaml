@@ -7,8 +7,8 @@
 # ROOT is the timestamped dir printed by `submit`; `poll` defaults to the latest run.
 
 # --- Datasets (the matched pointwise + pairwise instance files) ---
-pointwise: output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml
-pairwise: output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/iclr_test_instances.yaml
+pointwise: data/human-plus-generated/pointwise.yaml
+pairwise: data/human-plus-generated/pairwise.yaml
 
 # --- Paper-finder baselines to compare against (existing ablation sweeps) ---
 pointwise_sweep: output/ablation_sweeps/20260623_112217

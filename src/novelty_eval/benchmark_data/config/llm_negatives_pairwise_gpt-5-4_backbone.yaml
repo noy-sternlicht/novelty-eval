@@ -28,7 +28,7 @@ model_name: claude-opus-4-6
 # Example: "templates/remove_eval_data.jinja2"
 manipulation_prompt: "src/novelty_eval/benchmark_data/templates/remove_eval_data.jinja2"
 
-rebuild_negatives_from_yaml: "output/iclr_test_instances/pairwise_data/20260517_171954/manipulated/iclr_test_instances.yaml"
+rebuild_negatives_from_yaml: "data/human-plus-generated/pairwise.yaml"
 
 # Use only the original abstract, bypassing any abstract manipulation.
 # Cannot be combined with generate_both_versions: true.

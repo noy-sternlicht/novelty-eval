@@ -18,7 +18,7 @@
 # ---------------------------------------------------------------------------
 
 # Same pointwise instances file used to benchmark the other judges (must carry `label`).
-test_inputs: "output/iclr_test_instances/pairwise_data/20260518_133102/iclr_pointwise_instances.yaml"
+test_inputs: "data/human-plus-generated/pointwise.yaml"
 
 # Retrieval cache built by the web-search novelty judge (keyed by pointwise instance id).
 retrieval_cache_file: "output/.../retrieval_cache.json"

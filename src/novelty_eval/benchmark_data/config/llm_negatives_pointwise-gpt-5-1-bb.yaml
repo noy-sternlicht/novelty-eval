@@ -27,7 +27,7 @@ model_name: claude-opus-4-6
 # Set to null to use the default (templates/extract_research_plan.jinja2).
 # Example: "templates/remove_eval_data.jinja2"
 manipulation_prompt: "src/novelty_eval/benchmark_data/templates/remove_eval_data.jinja2"
-derive_pointwise_from_pairwise: "output/iclr_test_instances/pairwise_data/20260531_131054/benchmark_instances.yaml"
+derive_pointwise_from_pairwise: "data/human-plus-generated/backbone-gpt-5.1/pairwise.yaml"
 
 
 #pre_built_manipulation_cache_yaml: "output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/iclr_test_instances.yaml"
