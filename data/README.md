@@ -26,3 +26,6 @@ human-plus-generated/           D_h unchanged; D_l = ideas from a plain LLM idea
 
 `_plan` variants hold the same ideas rewritten into a two-field plan (purpose,
 mechanism) and are the idea-format ablation.
+
+These files are also released on the Hub as
+[noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench)
