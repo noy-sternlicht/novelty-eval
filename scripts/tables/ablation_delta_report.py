@@ -183,7 +183,7 @@ def main() -> None:
         sys.exit(f"ERROR: config not found: {config_path}")
 
     cfg = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-    repo_root = Path(__file__).parent.parent
+    repo_root = Path(__file__).parent.parent.parent
 
     # ── collect report paths ──────────────────────────────────────────────────
     report_paths: list[Path] = []

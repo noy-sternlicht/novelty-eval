@@ -50,7 +50,7 @@ from typing import Dict, List, Optional, Tuple
 
 import yaml
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 _REKEY = _REPO_ROOT / "scripts" / "rekey_retrieval_cache.py"
 _RETRIEVE = _REPO_ROOT / "src" / "novelty_eval" / "retrieval" / "retrieve_candidates.py"
 _FLATTEN = _REPO_ROOT / "src" / "novelty_eval" / "retrieval" / "flatten_retrieval_cache.py"

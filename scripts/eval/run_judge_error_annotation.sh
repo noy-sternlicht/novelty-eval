@@ -13,7 +13,7 @@
 set -euo pipefail
 
 # Get the project root directory (assuming script is in scripts/)
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # Activate the conda env if conda is available; otherwise fall back to the
 # system python3 (this tool only needs pyyaml + the stdlib).

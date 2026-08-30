@@ -143,7 +143,7 @@ def main() -> None:
         sys.exit(1)
 
     config = yaml.safe_load(config_path.read_text())
-    repo_root = Path(__file__).parent.parent
+    repo_root = Path(__file__).parent.parent.parent
 
     all_results: list[RunResult] = []
     sweep_labels: list[str] = []
