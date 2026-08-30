@@ -70,7 +70,7 @@ max_workers: 4
 # they can build the next request. Setting this true raises a clear error.
 use_batch_api: false
 
-output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output"
+output_dir: "output"
 
 # ---------------------------------------------------------------------------
 # Why not `python -m novelty_eval.run_benchmark`

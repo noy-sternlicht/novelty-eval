@@ -69,4 +69,4 @@ max_workers: 1
 # Baselines are sync only.
 use_batch_api: false
 
-output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output"
+output_dir: "output"

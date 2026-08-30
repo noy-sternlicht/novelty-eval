@@ -14,7 +14,7 @@
 # ---------------------------------------------------------------------------
 
 # Path to the test instances YAML file (required)
-test_inputs: "/Users/noysternlicht/myCode/Academic-Collabs/output/iclr_test_instances/pairwise_data/20260311_105604/iclr_test_instances.yaml"
+test_inputs: "output/iclr_test_instances/pairwise_data/20260311_105604/iclr_test_instances.yaml"
 
 # Name of the plain-text output report file (saved inside the timestamped artifact directory)
 output_file: "accuracy_report.txt"
@@ -62,7 +62,7 @@ max_workers: 50
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
-output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output/accuracy_test_artifacts"
+output_dir: "output/accuracy_test_artifacts"
 
 # ---------------------------------------------------------------------------
 # Instance filtering

@@ -38,7 +38,7 @@ llm_engine: "gpt-5.5-pro"
 # Keep aligned with the cutoff used when the cache/verdict was produced.
 cutoff_date: "2025-03-01"
 
-output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output/accuracy_test_artifacts"
+output_dir: "output/accuracy_test_artifacts"
 
 # Remove (or set null) for a full run.
 num_instances: 1

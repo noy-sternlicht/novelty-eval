@@ -1,13 +1,14 @@
 # Running the Scideator baseline on the cluster
 
-Project root on the cluster: `/sci/labs/tomhope/noystl/scideator_baseline`
+Project root on the cluster: `$SCIDEATOR_REMOTE_PATH` (set it below; it is site-specific).
 
 **Never run work on the GW node.** It only gets `sbatch`, `squeue`, `scancel`.
 
 ## 1. Push (from your laptop)
 
 ```bash
-export SCIDEATOR_REMOTE=noystl@phoenix-gw.cs.huji.ac.il
+export SCIDEATOR_REMOTE=<user>@<gw-host>
+export SCIDEATOR_REMOTE_PATH=<project root on the cluster>
 python scripts/cluster/cluster.py push
 ```
 
@@ -18,7 +19,7 @@ Sends code, `secrets.toml`, and the config's `test_inputs`. Code is chosen by
 
 ```bash
 srun -c4 --mem-per-cpu=10g --time=2:00:00 --pty $SHELL
-cd /sci/labs/tomhope/noystl/scideator_baseline
+cd "$SCIDEATOR_REMOTE_PATH"
 ./scripts/cluster/setup.sh
 ```
 
@@ -89,7 +90,7 @@ python scripts/cluster/cluster.py pull --run <timestamp>
 
 ```bash
 ssinfo                 # available GPU types
-ssqueue -u noystl      # your jobs
+ssqueue -u $USER       # your jobs
 scancel <job-id>
 sacct -j <job-id> --format=JobID,State,Elapsed,MaxRSS,NodeList
 ```

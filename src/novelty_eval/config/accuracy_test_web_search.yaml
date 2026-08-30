@@ -40,7 +40,7 @@ max_workers: 1
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
-output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output/accuracy_test_artifacts"
+output_dir: "output/accuracy_test_artifacts"
 
 # Small slice for a quick smoke test; remove (or set to null) for a full run
 num_instances: 1

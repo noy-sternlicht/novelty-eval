@@ -6,10 +6,10 @@
 
 # ── Input ────────────────────────────────────────────────────────────────────
 iclr_data:
-  - "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/iclr_data/20260313_161835/iclr_2026_clean_novelty_dataset_10_percent.json"
+  - "src/novelty_eval/benchmark_data/iclr_data/20260313_161835/iclr_2026_clean_novelty_dataset_10_percent.json"
 
 # ── Output ───────────────────────────────────────────────────────────────────
-output_dir: "/Users/noysternlicht/myCode/Academic-Collabs/output/iclr_test_instances/pointwise_data"
+output_dir: "output/iclr_test_instances/pointwise_data"
 
 # ── Pointwise mode ────────────────────────────────────────────────────────────
 # Enable pointwise mode (one idea per instance with a POSITIVE/NEGATIVE label).
@@ -26,7 +26,7 @@ pointwise_shuffle: true
 model_name: claude-opus-4-6
 
 # Path to the Jinja2 manipulation template. null → default (extract_research_plan).
-manipulation_prompt: "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/templates/remove_eval_data.jinja2"
+manipulation_prompt: "src/novelty_eval/benchmark_data/templates/remove_eval_data.jinja2"
 
 # Use only the original abstract, bypassing manipulation entirely.
 use_abstract_only: false

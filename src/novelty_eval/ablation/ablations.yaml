@@ -45,10 +45,9 @@
 shared:
   # Paths to Jinja2 templates
   templates:
-    remove_eval_data: &remove_eval_data "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/templates/remove_eval_data.jinja2"
-    extract_research_plan: &extract_plan "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/templates/extract_research_plan.jinja2"
-    extract_plan_verbatim: &extract_plan_verbatim "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/templates/extract_idea_summary.jinja2"
-    boring_idea_generation: &boring_idea_generation "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/templates/boring_idea_generation.jinja2"
+    remove_eval_data: &remove_eval_data "src/novelty_eval/benchmark_data/templates/remove_eval_data.jinja2"
+    extract_research_plan: &extract_plan "src/novelty_eval/benchmark_data/templates/extract_research_plan.jinja2"
+    boring_idea_generation: &boring_idea_generation "src/novelty_eval/benchmark_data/templates/boring_idea_generation.jinja2"
 
   vague_novelty_criterion: &vague_criterion |
     The substantive originality of the idea, characterized by:
@@ -61,7 +60,7 @@ shared:
 defaults:
   instance:
     iclr_data:
-      - "/Users/noysternlicht/myCode/Academic-Collabs/src/comparative_idea_quality_eval/benchmark_data/iclr_data/20260313_161835/iclr_2026_clean_novelty_dataset_10_percent.json"
+      - "src/novelty_eval/benchmark_data/iclr_data/20260313_161835/iclr_2026_clean_novelty_dataset_10_percent.json"
     num_top_papers: 1
     num_bottom_papers: 1
     model_name: "claude-opus-4-6"

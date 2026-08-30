@@ -16,7 +16,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = ROOT / "src/novelty_eval/config/accuracy_test_scideator.yaml"
-DEFAULT_REMOTE_PATH = "/sci/labs/tomhope/noystl/scideator_baseline"
+# The project root on the cluster. Site-specific, so there is no useful default:
+# set SCIDEATOR_REMOTE_PATH or pass --path.
+DEFAULT_REMOTE_PATH = ""
 ARTIFACTS = "output/accuracy_test_artifacts"
 LOGS = "output/cluster_logs"
 
@@ -138,7 +140,9 @@ def main() -> None:
 
     args = parser.parse_args()
     if not args.remote:
-        fail("no remote host. Pass --remote HOST, or export SCIDEATOR_REMOTE=noystl@<gw-host>")
+        fail("no remote host. Pass --remote HOST, or export SCIDEATOR_REMOTE=<user>@<gw-host>")
+    if not args.path:
+        fail("no remote path. Pass --path PATH, or export SCIDEATOR_REMOTE_PATH=<project root on the cluster>")
     if os.environ.get("SLURM_JOB_ID"):
         fail("this moves files between your laptop and the cluster, but it is running on a compute node.")
     args.func(args)
