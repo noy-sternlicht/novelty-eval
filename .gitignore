@@ -6,6 +6,7 @@ PLAN.md
 .venv-baselines/
 .pytest_cache/
 secrets.toml
+myenv/
 
 # Run artifacts
 logs/
