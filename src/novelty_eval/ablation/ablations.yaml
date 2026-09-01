@@ -7,7 +7,7 @@
 # -----------------
 # 1. shared:   YAML anchors for repeated strings (criteria, prompt paths).
 # 2. defaults: Global base settings for 'instance' creation and 'sweep' execution.
-# 3. tracks:   Track-specific baselines (e.g., 'pairwise', 'ranking'). These
+# 3. tracks:   Track-specific baselines (e.g., 'pairwise-hvh', 'pointwise-hvh'). These
 #              inherit from defaults and define the track's anchor configuration.
 # 4. ablations: Individual experiment definitions.
 #
@@ -15,14 +15,14 @@
 # --------------------------
 # Each ablation entry can specify:
 #   description:  Text used in reports and logs.
-#   tracks:       List of tracks to run this ablation on (e.g., [pairwise, ranking]).
+#   tracks:       List of tracks to run this ablation on (e.g., [pairwise-hvh, pointwise-hvh]).
 #                 The orchestrator automatically expands these into namespaced
 #                 experiments: '{track}_{name}'.
 #   inherit_from: Optional list of other ablations to merge settings from.
 #                 Settings are merged recursively: Base -> Parent(s) -> Current.
 #   instance:     Overrides for create_benchmark_instances.py.
 #                 - Use a dictionary for specific overrides.
-#                 - Use a string (e.g. "boring_negatives") to reuse instances from
+#                 - Use a string (e.g. "current") to reuse instances from
 #                   another experiment in the same track.
 #                 - Use null to reuse the track baseline instances.
 #   sweep:        Overrides for run_accuracy_sweep.py.
@@ -46,8 +46,6 @@ shared:
   # Paths to Jinja2 templates
   templates:
     remove_eval_data: &remove_eval_data "src/novelty_eval/benchmark_data/templates/remove_eval_data.jinja2"
-    extract_research_plan: &extract_plan "src/novelty_eval/benchmark_data/templates/extract_research_plan.jinja2"
-    boring_idea_generation: &boring_idea_generation "src/novelty_eval/benchmark_data/templates/boring_idea_generation.jinja2"
 
   vague_novelty_criterion: &vague_criterion |
     The substantive originality of the idea, characterized by:
@@ -112,13 +110,6 @@ defaults:
 # Track Baselines
 # ---------------------------------------------------------------------------
 tracks:
-  pairwise:
-    instance:
-      num_bottom_papers: 1
-    sweep:
-      test_mode: "pairwise"
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/iclr_test_instances.yaml"
-
   pairwise-vanilla-ai:
     instance:
       num_bottom_papers: 1
@@ -147,21 +138,6 @@ tracks:
       test_mode: "pairwise"
       test_inputs: "data/human-only/pairwise_plan.yaml"
 
-  ranking:
-    instance:
-      num_bottom_papers: 3
-    sweep:
-      test_mode: "ranking"
-      modes: ["swiss"]
-      test_inputs: "output/iclr_test_instances/ablation/c4/20260319_190917/iclr_test_instances.yaml"
-
-  pointwise:
-    instance:
-      derive_pointwise_from_track: "pairwise"
-    sweep:
-      test_mode: "pointwise"
-      test_inputs: "output/iclr_test_instances/ablation/pointwise_current/20260430_100138/iclr_pointwise_instances.yaml"
-
   pointwise-hvh:
     instance:
       derive_pointwise_from_track: "pairwise-hvh"
@@ -176,17 +152,10 @@ tracks:
       test_mode: "pointwise"
       test_inputs: "data/human-plus-generated/pointwise.yaml"
 
-  old_data:
-    instance: null  # Reuse existing instances for old data
-    sweep:
-      test_inputs: "output/iclr_vs_generated_test_instances/20260305_154230/test_instances.yaml"
-      test_mode: "ranking"
-      modes: ["swiss"]
-
 # ---------------------------------------------------------------------------
 # Ablations
 # ---------------------------------------------------------------------------
-# Many ablations apply to both 'pairwise' and 'ranking' tracks.
+# Many ablations apply to several tracks at once.
 # run_ablations.py automatically generates '{track}_{name}' for the requested tracks.
 ablations:
   # --- Baseline ---
@@ -194,7 +163,7 @@ ablations:
     description: "Current"
     group: baseline
     legacy_names: [c4, "20260320_133004"]   # c4 = old name for the 4-way ranking baseline
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
 
 
   # --- Evaluation methodology ablations ---
@@ -203,7 +172,7 @@ ablations:
     before_description: "A more specific novelty criterion with concrete guidance."
     group: evaluation
     legacy_names: [c1]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
 
     sweep:
       novelty_criterion_override: *vague_criterion
@@ -213,7 +182,7 @@ ablations:
     before_description: "Bidirectional evaluation (+ three samples per direction) to reduce position bias."
     group: evaluation
     legacy_names: [c5a]
-    tracks: [pairwise, ranking, pairwise-hvh, pairwise-vanilla-ai]
+    tracks: [pairwise-hvh, pairwise-vanilla-ai]
     sweep:
       n_runs: 3
       mec_k: 1
@@ -224,7 +193,7 @@ ablations:
     before_description: "Bidirectional evaluation with mec_k=3 (three samples per direction) to reduce position bias."
     group: evaluation
     legacy_names: [c5b]
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
     sweep:
       mec_k: 1
       bidirectional: true
@@ -234,7 +203,7 @@ ablations:
     before_description: "Judge's reasoning_effort='high'"
     group: evaluation
     legacy_names: []
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
     sweep:
       reasoning_effort: "low"
 
@@ -243,21 +212,10 @@ ablations:
     before_description: "Full judge prompt with detailed evaluation criteria."
     group: evaluation
     legacy_names: []
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
     sweep:
       pairwise_judge_template: "pairwise_novelty_no_criteria.jinja2"
       pointwise_judge_template: "pointwise_novelty_no_criteria.jinja2"
-
-
-  low_judge_reasoning_unidirectional:
-    description: "Judge's reasoning_effort=low"
-    before_description: "Judge's reasoning_effort='high'"
-    group: evaluation
-    legacy_names: []
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
-    sweep:
-      mec_k: 1
-      bidirectional: false
 
 
   # --- AI researcher judge prompt variations ---
@@ -299,43 +257,6 @@ ablations:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_comparative.jinja2"
 
   # --- Idea format ablations ---
-  boring_negatives:
-    description: "Negatives are boring ideas generated by prompting an LLM directly (no pipeline)"
-    before_description: "Negatives generated via the full multi-agent brainstorming pipeline."
-    group: idea_format
-    tracks: [pairwise, ranking, pointwise, pairwise-hvh, pointwise-hvh]
-    suppress_instance_mismatch_warning: true
-    instance:
-      generate_negatives: false
-      llm_negatives: true
-      llm_negatives_model: "claude-sonnet-4-5"
-      llm_negatives_prompt: *boring_idea_generation
-      pre_built_manipulation_cache_yaml: "output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/iclr_test_instances.yaml"
-    sweep:
-      test_inputs: "__PLACEHOLDER__"
-
-  convert_to_plan_form_pairwise:
-    description: "Convert existing ideas to plan format using a post-processing step before the sweep."
-    before_description: "Idea is in abstract form (results/eval data stripped)."
-    group: idea_format
-    tracks: [pairwise]
-    suppress_instance_mismatch_warning: true
-    sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/manually-manipulated/iclr_test_instances.yaml"
-#      test_inputs: "output/iclr_test_instances/pairwise_data/20260318_155708/manipulated/manually-manipulated/iclr_test_instances.yaml"
-
-  convert_to_plan_form_pointwise:
-    description: "Convert existing ideas to plan format using a post-processing step before the sweep."
-    before_description: "Idea is in abstract form (results/eval data stripped)."
-    group: idea_format
-    tracks: [ pointwise ]
-    suppress_instance_mismatch_warning: true
-    instance:
-      derive_pointwise_from_track: "pairwise"
-    sweep:
-      test_inputs: "output/iclr_test_instances/pairwise_data/20260506_202534/iclr_pointwise_instances.yaml"
-
-
   convert_to_plan_form_pairwise_vanilla:
     description: "Convert existing ideas to plan format using a post-processing step before the sweep."
     before_description: "Idea is in abstract form (results/eval data stripped)."
@@ -369,8 +290,6 @@ ablations:
     group: idea_format
     tracks: [ pointwise-vanilla-ai ]
     suppress_instance_mismatch_warning: true
-    instance:
-      derive_pointwise_from_track: "pairwise"
     sweep:
       test_inputs: "data/human-plus-generated/pointwise_plan.yaml"
 
@@ -379,41 +298,10 @@ ablations:
     description: "Evaluator has access to related work"
     before_description: "Evaluator has no access to related work."
     group: retrieval
-    tracks: [pairwise, ranking, pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai]
     retrieve: true
     sweep:
       retrieve_related_work: true
-
-  pointwise_retrieval:
-    description: "Evaluator has access to related work"
-    before_description: "Evaluator has no access to related work."
-    group: retrieval
-    tracks: [pointwise]
-    sweep:
-      retrieve_related_work: true
-      retrieval_cache_file: "output/iclr_test_instances/ablation/pointwise_current/20260430_100138/retrieval_cache.json"
-
-  pointwise_retrieval_1_candidate:
-    description: "Evaluator has access to related work"
-    before_description: "Evaluator has no access to related work."
-    group: retrieval
-    tracks: [ pointwise ]
-    sweep:
-      retrieve_related_work: true
-      retrieval_cache_file: "output/iclr_test_instances/ablation/pointwise_current/20260430_100138/retrieval_cache.json"
-      top_k_candidates: 1
-
-  web_search:
-    description: "Web-search judge backend (OpenAI Responses API + live ArXiv search)"
-    before_description: "Standard judge backend (no live search; cache-only related work)."
-    group: retrieval
-    tracks: [pointwise-vanilla-ai]
-    # No `instance:` key → reuses the track's test_inputs directly (like `current`).
-    sweep:
-      judge_backend: "web_search"
-      cutoff_date: "2025-03-01"
-      reasoning_effort: "medium"
-      mec_k: 1
 
   # --- Backbone model ablations ---
   gpt_5.1_backbone_pairwise_vanilla:
@@ -538,58 +426,3 @@ ablations:
       test_inputs: "data/human-plus-generated/backbone-opus-4-5/pointwise.yaml"
       retrieve_related_work: true
       retrieval_cache_file: "output/iclr_test_instances/ablation/combined_retrieval/opus-4-5_backbone/pointwise/retrieval_cache.json"
-
-
-
-#  # --- Old Instances Track ---
-#  old_data_all_bad:
-#    description: "Old data: all bad settings (vague criterion, old dataset, unidirectional, mec_k=1, effort=none)"
-#    track: "old_data"
-#    sweep:
-#      reasoning_effort: "none"
-#      mec_k: 1
-#      bidirectional: false
-#      novelty_criterion_override: *vague_criterion
-#
-#  old_data_vague_criterion:
-#    description: "Old data: new novelty criterion, all other settings bad"
-#    track: "old_data"
-#    sweep:
-#      reasoning_effort: "none"
-#      mec_k: 1
-#      bidirectional: false
-#
-#  old_data_unidirectional:
-#    description: "Old data: bidirectional debiasing, all other settings bad"
-#    track: "old_data"
-#    sweep:
-#      reasoning_effort: "none"
-#      mec_k: 1
-#      bidirectional: true
-#      novelty_criterion_override: *vague_criterion
-#
-#  old_data_mec_k_3:
-#    description: "Old data: bidirectional + mec_k=3, all other settings bad"
-#    track: "old_data"
-#    sweep:
-#      reasoning_effort: "none"
-#      mec_k: 3
-#      bidirectional: true
-#      novelty_criterion_override: *vague_criterion
-#
-#  old_data_high_reasoning:
-#    description: "Old data: high reasoning effort, all other settings bad"
-#    track: "old_data"
-#    sweep:
-#      reasoning_effort: "high"
-#      mec_k: 1
-#      bidirectional: false
-#      novelty_criterion_override: *vague_criterion
-#
-#  old_data_current_best:
-#    description: "Old data: current-best settings"
-#    track: "old_data"
-#    sweep:
-#      reasoning_effort: "high"
-#      mec_k: 3
-#      bidirectional: true
