@@ -9,9 +9,11 @@ Google exposes no API for creating a form from outside, so this writes an Apps
 Script the batch owner pastes into script.google.com and runs once. The script
 is the export; the form it builds is disposable and can be rebuilt from it.
 
-The reverse direction lives here too: `--responses` folds the form's response
-CSV back into the same `item_id,your_choice,notes` file the page exports, so
-both routes hand the batch owner the same artifact.
+The reverse direction lives here too: `--responses` folds the form's answers
+back into the same `item_id,your_choice,notes` file the page exports, so both
+routes hand the batch owner the same artifact. It takes either a downloaded
+response CSV or the URL of the form's response spreadsheet, which saves a
+download step when the sheet is readable by link.
 
 Presentation-only, like annotation_page.py: it reads a rendered page and shows
 the four whitelisted fields, so nothing that would de-blind an annotator can
@@ -25,6 +27,8 @@ import csv
 import json
 import re
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Sequence
 
@@ -39,6 +43,14 @@ NOTES_TITLE = "Notes " + ITEM_TAG
 _TAGGED = re.compile(r"\[item ([^\]]+)\]\s*$")
 
 ANSWER_HEADERS = ["item_id", "your_choice", "notes"]
+
+# A form's answers live in a Google Sheet, and Sheets will hand out any one tab
+# as CSV. The id says which spreadsheet, the gid which tab: a form's responses
+# are usually its own tab, so a URL without a gid would export the wrong one.
+_SHEET_ID = re.compile(r"/spreadsheets/d/([A-Za-z0-9_-]+)")
+_SHEET_GID = re.compile(r"[#?&]gid=([0-9]+)")
+_SHEET_EXPORT = "https://docs.google.com/spreadsheets/d/{id}/export?format=csv&gid={gid}"
+
 
 def _choice_label(choice: str) -> str:
     """The wording an annotator taps. Matches the page's buttons."""
@@ -220,19 +232,69 @@ function verifyForm() {{
 """
 
 
+def is_sheet_url(source: str) -> bool:
+    """Whether `--responses` names a Google Sheet rather than a local file."""
+    return str(source).startswith(("http://", "https://"))
+
+
+def fetch_sheet_csv(url: str) -> str:
+    """Download one tab of a Google Sheet as CSV text.
+
+    Only works on a sheet readable without signing in: the export endpoint has
+    no way to ask for credentials, so a private sheet comes back as the sign-in
+    page rather than as an error a caller could act on. That is worth catching
+    here, because the HTML would otherwise parse as a headerless CSV and fail
+    much further along.
+    """
+    found = _SHEET_ID.search(url)
+    if not found:
+        raise SystemExit(f"{url} is not a Google Sheets URL (no /spreadsheets/d/<id>).")
+    gid = _SHEET_GID.search(url)
+    export = _SHEET_EXPORT.format(id=found.group(1), gid=gid.group(1) if gid else "0")
+    try:
+        with urllib.request.urlopen(export) as response:
+            body = response.read().decode("utf-8-sig")
+            final = response.geturl()
+    except urllib.error.HTTPError as err:
+        body, final = "", ""
+        if err.code not in (401, 403, 404):
+            raise SystemExit(f"{export}: {err}") from err
+    except urllib.error.URLError as err:
+        raise SystemExit(f"{export}: {err.reason}") from err
+    # Sheets answers a request it will not serve with the sign-in page, at 401
+    # or at 200 after a redirect to accounts.google.com.
+    if not body or body.lstrip().startswith("<") or "accounts.google.com" in final:
+        raise SystemExit(
+            f"{url} is not readable without signing in.\n"
+            "Either share it (Share > General access > Anyone with the link > Viewer) "
+            "and rerun, or download it (File > Download > Comma-separated values) and "
+            "pass the downloaded file to --responses instead."
+        )
+    return body
+
+
+def read_response_table(source: str) -> list[list[str]]:
+    """Read a response CSV off disk, or off the sheet it lives in."""
+    if is_sheet_url(source):
+        return list(csv.reader(fetch_sheet_csv(source).splitlines()))
+    with Path(source).open(newline="", encoding="utf-8-sig") as fh:
+        return list(csv.reader(fh))
+
+
 def answers_from_responses(
-    responses: Path,
+    responses: str | Path,
     rows: Sequence[dict],
     choices: Sequence[str],
 ) -> tuple[list[dict], list[str]]:
-    """Fold a form's response CSV into answer rows, plus what is still missing.
+    """Fold a form's responses into answer rows, plus what is still missing.
+
+    `responses` is a downloaded response CSV or the URL of the sheet holding it.
 
     A form can hold more than one submission -- an edited response, or a second
     sitting. Later rows win per item, and a blank answer never overwrites one
     already given, so a partial resubmission can only add.
     """
-    with responses.open(newline="", encoding="utf-8-sig") as fh:
-        table = list(csv.reader(fh))
+    table = read_response_table(str(responses))
     if not table:
         raise SystemExit(f"{responses} is empty.")
     header, *body = table
@@ -273,6 +335,7 @@ def answers_from_responses(
 def write_answers_csv(path: Path, answers: Sequence[dict]) -> None:
     """Write the answers file byte-for-byte as the annotation page writes it:
     a bare header, every value quoted, LF line endings."""
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
         fh.write(",".join(ANSWER_HEADERS) + "\n")
         writer = csv.DictWriter(
@@ -286,8 +349,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("page", type=Path, help="a rendered <annotator>.html from a batch plan")
     parser.add_argument(
         "--responses",
-        type=Path,
-        help="a response CSV downloaded from the form; converts it instead of building the script",
+        metavar="CSV_OR_SHEET_URL",
+        help="the form's answers -- a downloaded response CSV, or the URL of the response "
+        "spreadsheet if it is shared with anyone who has the link. Converts them into an "
+        "answers CSV instead of building the script.",
     )
     parser.add_argument("--out", type=Path, help="where to write (default: alongside the page)")
     parser.add_argument(
@@ -313,7 +378,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         out = args.out or args.page.with_name(f"answers_{annotator}.csv")
         write_answers_csv(out, answers)
         done = sum(1 for a in answers if a["your_choice"])
-        print(f"{out}: {done} of {len(rows)} answered")
+        source = "sheet" if is_sheet_url(args.responses) else "file"
+        print(f"{out}: {done} of {len(rows)} answered, from the {source}")
         for line in problems:
             print(f"  {line}", file=sys.stderr)
         return 0
