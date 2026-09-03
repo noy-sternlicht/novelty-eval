@@ -24,10 +24,6 @@ Options worth knowing:
                           numbers rather than stretched to fill the page — so
                           --width becomes a ceiling. --cell-width/--cell-height
                           override the fit.
-    --style forest        dot-and-interval instead of the heatmap. Needs chart
-                          data at schema v2+ (re-run the merge with
-                          --charts-only if yours predates it).
-    --style both          emit the heatmap and the forest plot.
     --variant filtered    which accuracy report to read (default: filtered).
     --rows a b c          canonical ablation names, in order. Also settable as
                           `rows:` in --config; the flag wins. Default: every
@@ -49,10 +45,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[3] / "src"))
 
 from novelty_eval.figures import unified_chart_data
-from novelty_eval.figures.viz import (
-    _generate_two_track_forest,
-    _generate_two_track_heatmap,
-)
+from novelty_eval.figures.viz import _generate_two_track_heatmap
 
 DEFAULT_METRIC = {"pairwise": "pairwise_accuracy", "pointwise": "f1_macro"}
 DEFAULT_METRIC_LABEL = {
@@ -223,9 +216,6 @@ def main() -> None:
     parser.add_argument("--variant", default="filtered",
                         choices=["filtered", "unfiltered"],
                         help="Which accuracy report the data came from (default: filtered).")
-    parser.add_argument("--style", default="heatmap",
-                        choices=["heatmap", "forest", "both"],
-                        help="Figure style (default: heatmap).")
     parser.add_argument("--rows", nargs="+", metavar="NAME",
                         help="Canonical ablation names, in top-to-bottom order. "
                              "Overrides `rows:` in --config.")
@@ -343,7 +333,6 @@ def main() -> None:
 
     setups = args.setup or list(SETUPS)
     out_dir = Path(args.out_dir)
-    styles = ["heatmap", "forest"] if args.style == "both" else [args.style]
 
     written_any = False
     for setup in setups:
@@ -380,48 +369,35 @@ def main() -> None:
         label = (args.metric_label or metric_labels_cfg.get(metric)
                  or DEFAULT_METRIC_LABEL.get(setup, metric))
 
-        for style in styles:
-            fn = (_generate_two_track_heatmap if style == "heatmap"
-                  else _generate_two_track_forest)
-            # The metric is in the filename, not on the figure: the chart stays
-            # slim and the caption says which one, but two metrics for the same
-            # setup no longer overwrite each other.
-            stem = f"{args.prefix}_{setup}_{args.variant}_{metric}"
-            if style == "forest":
-                stem += "_forest"
-            out_path = out_dir / f"{stem}.{args.formats[0].lstrip('.')}"
-            kwargs = dict(tracks=loaded, rows=rows, models=models, metric=metric,
-                          metric_label=label, out_path=out_path,
-                          model_labels=[model_labels.get(m, m) for m in models],
-                          width_in=args.width, formats=args.formats[1:], dpi=args.dpi)
-            if style == "heatmap":
-                kwargs["stacked"] = stacked
-                kwargs["compact"] = compact
-                kwargs["model_label_rotation"] = model_label_rotation
-                kwargs["row_label_in"] = row_label_width
-                kwargs["cell_width_in"] = cell_width
-                kwargs["cell_height_in"] = cell_height
-                kwargs["row_label_wrap"] = row_label_wrap
-                kwargs["baseline_row"] = not args.no_baseline_row
-                kwargs["cell_absolute"] = not args.no_cell_absolute
-                kwargs["cell_before"] = args.cell_before
-                kwargs["colorbar"] = colorbar
-                kwargs["row_axis_label"] = row_axis_label
-                kwargs["col_axis_label"] = col_axis_label
-            if footnote is not None:
-                kwargs["footnote"] = footnote
-            result = fn(**kwargs)
-            if not result:
-                reason = ("no CI bounds in the chart data — re-run "
-                          "merge_ablation_runs.py --charts-only to regenerate it "
-                          "at schema v2" if style == "forest"
-                          else f"no finite data for metric {metric!r} — check "
-                               "the spelling against the merge data")
-                print(f"could not render {setup}/{style}: {reason}", file=sys.stderr)
-                continue
-            written_any = True
-            for p in result:
-                print(f"{setup:>9} / {style:<7} → {p}")
+        # The metric is in the filename, not on the figure: the chart stays
+        # slim and the caption says which one, but two metrics for the same
+        # setup no longer overwrite each other.
+        stem = f"{args.prefix}_{setup}_{args.variant}_{metric}"
+        out_path = out_dir / f"{stem}.{args.formats[0].lstrip('.')}"
+        kwargs = dict(tracks=loaded, rows=rows, models=models, metric=metric,
+                      metric_label=label, out_path=out_path,
+                      model_labels=[model_labels.get(m, m) for m in models],
+                      width_in=args.width, formats=args.formats[1:], dpi=args.dpi,
+                      stacked=stacked, compact=compact,
+                      model_label_rotation=model_label_rotation,
+                      row_label_in=row_label_width,
+                      cell_width_in=cell_width, cell_height_in=cell_height,
+                      row_label_wrap=row_label_wrap,
+                      baseline_row=not args.no_baseline_row,
+                      cell_absolute=not args.no_cell_absolute,
+                      cell_before=args.cell_before, colorbar=colorbar,
+                      row_axis_label=row_axis_label, col_axis_label=col_axis_label)
+        if footnote is not None:
+            kwargs["footnote"] = footnote
+        result = _generate_two_track_heatmap(**kwargs)
+        if not result:
+            print(f"could not render {setup}: no finite data for metric "
+                  f"{metric!r} — check the spelling against the merge data",
+                  file=sys.stderr)
+            continue
+        written_any = True
+        for p in result:
+            print(f"{setup:>9} → {p}")
 
     if not written_any:
         raise SystemExit("Nothing was rendered.")

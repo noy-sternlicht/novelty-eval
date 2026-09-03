@@ -14,23 +14,19 @@ from src.novelty_eval.figures.chart_two_track import (
 from src.novelty_eval.analysis.stats_one_pass import (
     compute_bootstrap_results_pairwise_all,
 )
-from src.novelty_eval.figures.viz import (
-    _generate_two_track_forest,
-    _generate_two_track_heatmap,
-)
+from src.novelty_eval.figures.viz import _generate_two_track_heatmap
 
 MODELS = ["judge-a", "judge-b"]
 
 
-def _panel(title, delta, with_ci=True):
+def _panel(title, delta):
     """One panel where every model moves by `delta` from a 0.60 baseline."""
     bs = {}
     for m in MODELS:
-        entry = {"significant": True, "reliable": True}
-        if with_ci:
-            entry["ci_low"] = delta - 0.02
-            entry["ci_high"] = delta + 0.02
-        bs[(m, "pairwise_accuracy")] = entry
+        bs[(m, "pairwise_accuracy")] = {
+            "significant": True, "reliable": True,
+            "ci_low": delta - 0.02, "ci_high": delta + 0.02,
+        }
     return {
         "title": title,
         "baseline_metrics": {m: {"pairwise_accuracy": 0.60} for m in MODELS},
@@ -39,14 +35,14 @@ def _panel(title, delta, with_ci=True):
     }
 
 
-def _track(plan_suffix, with_ci=True):
+def _track(plan_suffix):
     return {
         "setup": "pairwise",
         "all_models": list(MODELS),
         "rendered": ["vague_criterion", f"convert_to_plan_form_{plan_suffix}"],
         "panels": {
-            "vague_criterion": _panel("Vague criterion", -0.05, with_ci),
-            f"convert_to_plan_form_{plan_suffix}": _panel("Plan form", 0.03, with_ci),
+            "vague_criterion": _panel("Vague criterion", -0.05),
+            f"convert_to_plan_form_{plan_suffix}": _panel("Plan form", 0.03),
         },
     }
 
@@ -54,7 +50,7 @@ def _track(plan_suffix, with_ci=True):
 # --- bootstrap now surfaces the interval, not just the booleans -------------
 
 def test_pairwise_bootstrap_returns_ci_bounds():
-    """CI bounds must be returned so forest plots need no re-bootstrap."""
+    """CI bounds must be returned so charts need no re-bootstrap."""
     # (is_correct, is_tie, gt_winner) — gt must match positionally across the pair.
     base = [(1.0, 0.0, 0.0)] * 50 + [(0.0, 0.0, 0.0)] * 50
     abl = [(1.0, 0.0, 0.0)] * 80 + [(0.0, 0.0, 0.0)] * 20
@@ -165,9 +161,9 @@ def test_explicit_row_labels_win_over_data_titles():
 
 # --- rendering --------------------------------------------------------------
 
-def _tracks_and_rows(with_ci=True):
-    tracks = [("Human-only", _track("pairwise_human", with_ci)),
-              ("Human + generated", _track("pairwise_vanilla", with_ci))]
+def _tracks_and_rows():
+    tracks = [("Human-only", _track("pairwise_human")),
+              ("Human + generated", _track("pairwise_vanilla"))]
     rows = _common_rows([d for _, d in tracks], None, {})
     return tracks, rows
 
@@ -180,22 +176,6 @@ def test_heatmap_renders_pdf_and_png(tmp_path):
     assert written is not None
     assert {p.suffix for p in written} == {".pdf", ".png"}
     assert all(p.exists() and p.stat().st_size > 0 for p in written)
-
-
-def test_forest_renders_when_ci_present(tmp_path):
-    tracks, rows = _tracks_and_rows(with_ci=True)
-    written = _generate_two_track_forest(
-        tracks=tracks, rows=rows, models=MODELS, metric="pairwise_accuracy",
-        metric_label="delta", out_path=tmp_path / "forest.pdf")
-    assert written and written[0].exists()
-
-
-def test_forest_declines_without_ci(tmp_path):
-    """v1 data has no interval; the caller must be told rather than shown a lie."""
-    tracks, rows = _tracks_and_rows(with_ci=False)
-    assert _generate_two_track_forest(
-        tracks=tracks, rows=rows, models=MODELS, metric="pairwise_accuracy",
-        metric_label="delta", out_path=tmp_path / "forest.pdf") is None
 
 
 def test_heatmap_declines_when_no_finite_data(tmp_path):
