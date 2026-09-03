@@ -34,11 +34,11 @@ Options worth knowing:
                           in-figure title block (the LaTeX caption carries it),
                           and a per-track median tick on each row.
     --config FILE         YAML with row_labels / model_labels / track_titles.
-                          The same file chart_two_track.py takes.
+                          The same file the figure notebook reads.
     --csv PATH            write the plotted numbers. Defaults to the figure
                           path with a .csv suffix; --no-csv turns it off.
     --keep-unsupported    plot the configurations a judge cannot honour, which
-                          chart_two_track.py's UNSUPPORTED_CELLS drops.
+                          common.py's UNSUPPORTED_CELLS drops.
 
 Tie rates are only comparable between runs that sampled the judge the same way:
 a tie needs an even number of votes to be reachable at all, so `unidirectional`
@@ -56,12 +56,13 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[3] / "src"))
 
-from novelty_eval.figures.chart_two_track import (
-    DEFAULT_TRACK_SUFFIXES,
+from novelty_eval.figures.common import (
+    TRACK_SUFFIXES,
     UNSUPPORTED_CELLS,
-    _row_key,
+    load_config,
+    row_key,
+    save_figure,
 )
-from novelty_eval.figures.viz import _save_figure
 
 # Sampling-depth ablations. Their tie counts are on a different scale by
 # construction (see the module docstring), so they stay out unless asked for.
@@ -137,18 +138,6 @@ _MODE_RE = re.compile(r"^Test Mode:\s*(\S+)", re.M)
 # Reading runs
 # ---------------------------------------------------------------------------
 
-def _load_yaml(path: Path) -> dict:
-    try:
-        import yaml
-    except ImportError:
-        raise SystemExit("This script needs PyYAML installed.")
-    try:
-        with open(path, encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    except yaml.YAMLError as exc:
-        raise SystemExit(f"not valid YAML ({path}): {exc}")
-
-
 def _resolve_sweep_dirs(spec: str, repo_root: Path) -> list[tuple[Path, tuple[str, ...]]]:
     """Expand one --track path into (sweep directory, track prefixes) pairs.
 
@@ -165,7 +154,7 @@ def _resolve_sweep_dirs(spec: str, repo_root: Path) -> list[tuple[Path, tuple[st
         if not p.exists():
             raise SystemExit(f"--track path does not exist: {p}")
         if p.is_file():
-            cfg = _load_yaml(p)
+            cfg = load_config(p)
             listed = cfg.get("dirs") or []
             if not listed:
                 raise SystemExit(f"--track config has no `dirs:` entries: {p}")
@@ -189,7 +178,7 @@ def _ablation_descriptions() -> dict:
     path = Path(__file__).resolve().parent.parent / "ablation" / "ablations.yaml"
     if not path.exists():
         return {}
-    data = _load_yaml(path).get("ablations") or {}
+    data = load_config(path).get("ablations") or {}
     out = {}
     for name, spec in data.items():
         if isinstance(spec, dict) and spec.get("description"):
@@ -252,7 +241,7 @@ def _run_settings(leaf: Path, artifact: Path) -> dict:
     """
     cfg_path = leaf / "_run_config.yaml"
     if cfg_path.exists():
-        return _load_yaml(cfg_path)
+        return load_config(cfg_path)
     stub = artifact / "debug_args.md"
     if stub.exists():
         import json
@@ -376,18 +365,18 @@ def _shared_ablations(tracks, requested, include_depth):
     for _, cells in tracks:
         idx = defaultdict(set)
         for ablation, _model in cells:
-            idx[_row_key(ablation, DEFAULT_TRACK_SUFFIXES)].add(ablation)
+            idx[row_key(ablation, TRACK_SUFFIXES)].add(ablation)
             idx[ablation].add(ablation)
         indexes.append(idx)
 
     if requested:
-        keys = [_row_key(a, DEFAULT_TRACK_SUFFIXES) for a in requested]
+        keys = [row_key(a, TRACK_SUFFIXES) for a in requested]
     else:
         common = set(indexes[0])
         for idx in indexes[1:]:
             common &= set(idx)
         keys = sorted(k for k in common
-                      if k == _row_key(k, DEFAULT_TRACK_SUFFIXES))
+                      if k == row_key(k, TRACK_SUFFIXES))
         if not include_depth:
             keys = [k for k in keys if k not in DEPTH_ABLATIONS]
 
@@ -419,7 +408,7 @@ def _rows(tracks, ablations, lookups, requested_models, keep_unsupported=False):
     """Gather plot rows, keyed by model, sorted by median tie rate descending.
 
     Configurations a judge cannot actually run — see UNSUPPORTED_CELLS, shared
-    with chart_two_track.py so the figures blank the same cells — are dropped
+    with common.py so every figure blanks the same cells — are dropped
     rather than plotted, because the number they produced measures nothing.
     """
     per_model = defaultdict(list)
@@ -609,7 +598,7 @@ def _draw(order, per_model, tracks, model_labels, out_path, formats, width_in,
         y_in -= 0.20
         fig.text(left_pad / width_in, y_in / height, subtitle, ha="left",
                  va="baseline", fontsize=9, color="#52514e")
-    return _save_figure(fig, out_path, formats=formats, dpi=dpi)
+    return save_figure(fig, out_path, formats=formats, dpi=dpi)
 
 
 def _median_ticks(ax, y, points, half_height):
@@ -699,7 +688,7 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[3]
-    cfg = _load_yaml(Path(args.config)) if args.config else {}
+    cfg = load_config(Path(args.config)) if args.config else {}
     model_labels = cfg.get("model_labels") or {}
     ablation_labels = cfg.get("row_labels") or {}
     track_titles = cfg.get("track_titles") or {}

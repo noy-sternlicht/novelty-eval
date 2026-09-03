@@ -7,8 +7,8 @@ pairwise on the right. Rows are where the *negative* ideas came from (human, or
 a generation backbone); columns are judge models; each cell is that judge's
 absolute score, not a delta.
 
-It answers a different question from `chart_two_track.py`, which holds the
-negatives fixed and varies the ablation. Here the ablation is fixed at the
+It answers a different question from `two_track_figure.ipynb`, which holds
+the negatives fixed and varies the ablation. Here the ablation is fixed at the
 baseline prompt and the negatives move, so the figure shows how far judge
 quality travels as the thing being discriminated against gets stronger.
 
@@ -54,10 +54,12 @@ import numpy as np
 sys.path.append(str(Path(__file__).resolve().parents[3] / "src"))
 
 from novelty_eval.figures import unified_chart_data
-from novelty_eval.figures.viz import (
-    _DELTA_CMAP_COLORS,
-    _PDF_RCPARAMS,
-    _save_figure,
+from novelty_eval.figures.common import (
+    DELTA_COLORS,
+    PDF_RCPARAMS,
+    chart_data_path,
+    load_config,
+    save_figure,
 )
 
 SETUPS = ("pointwise", "pairwise")
@@ -115,28 +117,9 @@ def _parse_metric_pair(spec: str) -> dict[str, str]:
 
 
 def _data_path(merge_dir: Path, setup: str, variant: str) -> Path | None:
-    """Locate unified_<setup>[_filtered].json under a merge output directory."""
-    base = merge_dir / "unified_charts" if (merge_dir / "unified_charts").is_dir() \
-        else merge_dir
-    suffix = "" if variant == "unfiltered" else f"_{variant}"
-    candidate = base / f"unified_{setup}{suffix}.json"
-    return candidate if candidate.exists() else None
-
-
-def _load_config(path: Path | None) -> dict:
-    if path is None:
-        return {}
-    try:
-        import yaml
-    except ImportError:
-        raise SystemExit("--config needs PyYAML installed.")
-    if not path.exists():
-        raise SystemExit(f"--config file not found: {path}")
-    try:
-        with open(path, encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    except yaml.YAMLError as exc:
-        raise SystemExit(f"--config is not valid YAML ({path}): {exc}")
+    """The saved chart data for one setup, or None when the merge has none."""
+    path = chart_data_path(merge_dir, setup, variant)
+    return path if path.exists() else None
 
 
 def _baseline_metrics(data: dict, model: str) -> dict:
@@ -228,14 +211,14 @@ def _render(blocks: list, row_labels: list[str], model_labels: list[str],
         # Sequential: the pale end of the diverging ramp upward, so a low score
         # is light rather than red — red would imply a sign the scale lacks.
         cmap = mcolors.LinearSegmentedColormap.from_list(
-            "score_seq", _DELTA_CMAP_COLORS[1:], N=256)
+            "score_seq", DELTA_COLORS[1:], N=256)
     else:
         # Symmetric around the pivot so equal distances either side get equal
         # colour weight, and the pivot itself lands on the neutral midpoint.
         spread = max(float(np.abs(finite - center).max()), 1.0)
         vmin, vmax = center - spread, center + spread
         cmap = mcolors.LinearSegmentedColormap.from_list(
-            "score_div", _DELTA_CMAP_COLORS, N=256)
+            "score_div", DELTA_COLORS, N=256)
     cmap.set_bad(color="#e2e8f0")
 
     n_r, n_c, n_b = len(row_labels), len(model_labels), len(blocks)
@@ -258,7 +241,7 @@ def _render(blocks: list, row_labels: list[str], model_labels: list[str],
                       + xtitle_in + xlab_in)
     fig_h = grid_bottom_in + grid_h_in + top_gap_in + title_in + top_pad
 
-    plt.rcParams.update({"font.family": "sans-serif", **_PDF_RCPARAMS})
+    plt.rcParams.update({"font.family": "sans-serif", **PDF_RCPARAMS})
     fig = plt.figure(figsize=(width_in, fig_h), facecolor="white")
     left = left_in / width_in
     block_w = (n_c * cell_w) / width_in
@@ -349,7 +332,7 @@ def _render(blocks: list, row_labels: list[str], model_labels: list[str],
         fig.text(left, bot_pad / fig_h, footnote, ha="left", va="bottom",
                  fontsize=5.4, color="#666666", style="italic", linespacing=1.5)
 
-    return _save_figure(fig, out_path, formats=formats, dpi=dpi)
+    return save_figure(fig, out_path, formats=formats, dpi=dpi)
 
 
 def main() -> None:
@@ -393,7 +376,7 @@ def main() -> None:
                         help="Output filename prefix (default: negatives_source).")
     args = parser.parse_args()
 
-    cfg = _load_config(Path(args.config) if args.config else None)
+    cfg = load_config(Path(args.config) if args.config else None)
     rows_cfg = cfg.get("rows") or DEFAULT_ROWS
     if not isinstance(rows_cfg, list) or not rows_cfg:
         raise SystemExit("config `rows:` must be a non-empty list of row specs.")

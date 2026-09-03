@@ -2,7 +2,7 @@
 """
 Collect panels from several merges into one chart-data set
 ==========================================================
-`chart_two_track.py` draws one row per panel of a single merge's
+`two_track_figure.ipynb` draws one row per panel of a single merge's
 `unified_*.json`. That is enough when every row shares a baseline, because one
 merge can only hold one baseline (`baseline:` is global to a merge).
 
@@ -15,9 +15,9 @@ produces a valid chart-data set whose rows are each measured against their own
 baseline.
 
 The output directory mimics a merge output (`<out>/unified_charts/unified_*.json`),
-so `chart_two_track.py --track NAME=<out>` consumes it unchanged. Pass
-`--no-baseline-row` when drawing it: the per-judge baseline strip assumes one
-baseline for the whole grid, which is exactly what this breaks.
+so the figure notebook consumes it unchanged as one more track. Drop the
+baseline strip when drawing it: the strip assumes one baseline for the whole
+grid, which is exactly what this breaks.
 
     python collect_chart_panels.py --setup pairwise \\
         --out output/ablation_sweeps/retrieval_by_generator \\
@@ -30,13 +30,12 @@ named ones. Panels keep their source order, which becomes the row order.
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parents[3] / "src"))
 
-def _data_path(merge_dir: Path, setup: str, variant: str) -> Path:
-    base = merge_dir / "unified_charts" if (merge_dir / "unified_charts").is_dir() else merge_dir
-    suffix = "" if variant == "unfiltered" else f"_{variant}"
-    return base / f"unified_{setup}{suffix}.json"
+from novelty_eval.figures.common import chart_data_path
 
 
 def main() -> None:
@@ -57,7 +56,7 @@ def main() -> None:
 
     for src in args.sources:
         raw, _, wanted = src.partition(":")
-        path = _data_path(Path(raw), args.setup, args.variant)
+        path = chart_data_path(Path(raw), args.setup, args.variant)
         if not path.exists():
             raise SystemExit(f"no {args.setup} chart data in {raw} (looked for {path})")
         data = json.loads(path.read_text())
