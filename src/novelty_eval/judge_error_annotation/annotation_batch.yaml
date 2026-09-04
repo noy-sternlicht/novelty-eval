@@ -4,7 +4,7 @@
 # batch can mix runs, judges and benchmarks. The script prints every group's
 # pool size and fails loudly rather than under-filling one.
 
-out_dir: output/judge_error_annotations/batch_opus_4-6_mistakes
+out_dir: output/judge_error_annotations/batch_opus_4-6_mistakes_gpt_5-4
 
 num_annotators: 2
 
@@ -34,23 +34,21 @@ groups:
 #    min_novelty_margin: 6
 #    per_annotator: 5
 #
-#  # Hard pairs: a strong judge (opus-4-6) got these wrong, on a benchmark whose
-#  # negatives were generated with a gpt-5.4 backbone. The margin keeps only the
-#  # confident failures, not the pairs it abstained on.
-#  - name: hard
-##    run_dir: output/ablation_sweeps/20260531_135654/pairwise-vanilla-ai_gpt_5.4_backbone_pairwise_vanilla/pairwise-vanilla-ai_gpt_5.4_backbone_pairwise_vanilla-claude-opus-4-6 # abstracts, generator - gpt-5.4
-#    run_dir: output/ablation_sweeps/20260523_140440/pairwise-vanilla-ai_convert_to_plan_form_pairwise_vanilla/pairwise-vanilla-ai_convert_to_plan_form_pairwise_vanilla-claude-opus-4-6 # plans
-#    select: mistakes
-#    min_novelty_margin: 6
-#    per_annotator: 10
+ # Hard pairs: a strong judge (opus-4-6) got these wrong, on a benchmark whose
+ # negatives were generated with a gpt-5.4 backbone. The margin keeps only the
+ # confident failures, not the pairs it abstained on.
+ - name: hard
+   run_dir: output/ablation_sweeps/20260531_135654/pairwise-vanilla-ai_gpt_5.4_backbone_pairwise_vanilla/pairwise-vanilla-ai_gpt_5.4_backbone_pairwise_vanilla-claude-opus-4-6 # abstracts, generator - gpt-5.4
+  #  run_dir: output/ablation_sweeps/20260523_140440/pairwise-vanilla-ai_convert_to_plan_form_pairwise_vanilla/pairwise-vanilla-ai_convert_to_plan_form_pairwise_vanilla-claude-opus-4-6 # plans
+   select: mistakes
+   per_annotator: 10
 
-
-  # The cases under study: where the judge being evaluated failed. A tie counts
-  # as a failure, so this pool includes pairs it could not separate at all.
-  - name: opus-4-6-mistakes
-    run_dir: output/ablation_sweeps/20260518_110534/pairwise-vanilla-ai_current/pairwise-vanilla-ai_current-claude-opus-4-6
-    select: mistakes
-    per_annotator: 21
+  # # The cases under study: where the judge being evaluated failed. A tie counts
+  # # as a failure, so this pool includes pairs it could not separate at all.
+  # - name: opus-4-6-mistakes
+  #   run_dir: output/ablation_sweeps/20260518_110534/pairwise-vanilla-ai_current/pairwise-vanilla-ai_current-claude-opus-4-6
+  #   select: mistakes
+  #   per_annotator: 21
 
 
 # Each group can override where its benchmark instances come from. Left out, the
