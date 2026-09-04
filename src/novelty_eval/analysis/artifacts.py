@@ -301,6 +301,27 @@ def _extract_mode_from_artifact_dir(artifact_dir: Path) -> str:
     return "ranking"
 
 
+def _extract_ablation_from_artifact_dir(artifact_dir: Path) -> str:
+    """
+    Extract the ablation/config name an artifact dir belongs to.
+
+    Sweep artifacts are laid out as
+    ``<ablation>/<ablation>-<model>/accuracy_test_artifacts/<timestamp>``, so the
+    ablation name sits two levels above the timestamp.  Needed whenever several
+    configs of the *same* model are compared side by side (e.g. a k=3 sweep and
+    the k=1 sub-runs derived from it), since the model name alone no longer
+    identifies a row.  Falls back to the nearest named ancestor for dirs that do
+    not follow the layout (e.g. ``web_search_self_judge/accuracy_test_artifacts/<ts>``).
+    """
+    if artifact_dir.parent.name != "accuracy_test_artifacts":
+        return artifact_dir.name
+    model_dir = artifact_dir.parent.parent
+    ablation_dir = model_dir.parent
+    if ablation_dir.name and model_dir.name.startswith(f"{ablation_dir.name}-"):
+        return ablation_dir.name
+    return model_dir.name
+
+
 def _extract_exclude_set_from_filtered_report(
     artifact_dir: Path,
     report_filename: str = "filtered_accuracy_report.txt",

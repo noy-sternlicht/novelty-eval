@@ -32,6 +32,7 @@ from utils import LOGGER as LOGGER  # reassigned to a file logger in main() once
 from logging_utils import setup_logger
 from novelty_eval.analysis.artifacts import (
     _collect_artifact_dirs,
+    _extract_ablation_from_artifact_dir,
     _extract_instance_id_from_key,
     _extract_instances_path,
     _extract_mode_from_artifact_dir,
@@ -73,13 +74,18 @@ def _pairwise_gt(artifact_dir: Path) -> Dict[str, Set[str]]:
 
 
 def _one_scores_file(artifact_dir: Path, glob_pat: str) -> Optional[Path]:
-    """The single scores.json for this artifact dir (n=1 everywhere in this pipeline)."""
+    """The single scores.json for this artifact dir.
+
+    Divergence is a per-instance right/wrong comparison, so it needs exactly one
+    run.  Most artifact dirs here have one; derived k=1 sub-run dirs carry several
+    independent single-sample runs, and we compare against the first.
+    """
     matches = sorted(artifact_dir.glob(glob_pat)) or sorted(artifact_dir.glob("scores.json"))
     if not matches:
         return None
     if len(matches) > 1:
-        LOGGER.warning(f"{artifact_dir.name}: expected one scores.json, found {len(matches)} "
-                       f"(n>1 run?) — using {matches[0]}.")
+        LOGGER.warning(f"{artifact_dir.name}: found {len(matches)} runs (derived sub-runs, or "
+                       f"n>1?) — comparing against the first only: {matches[0]}.")
     return matches[0]
 
 
@@ -425,7 +431,11 @@ def main() -> None:
     for a in baseline_dirs:
         artifact_dir = Path(a)
         mode = _extract_mode_from_artifact_dir(artifact_dir)
-        model = _extract_model_from_artifact_dir(artifact_dir)
+        # Qualify by ablation: the same model can appear under several configurations
+        # (e.g. a k=3 sweep and the k=1 sub-runs derived from it), which would otherwise
+        # produce two identically titled sections.
+        model = f"{_extract_model_from_artifact_dir(artifact_dir)} " \
+                f"({_extract_ablation_from_artifact_dir(artifact_dir)})"
         if mode == "pointwise":
             base = _pointwise_outcomes(artifact_dir, keep_pointwise)
             section = _pointwise_section(ref_pw, ref_model, root, base, model, artifact_dir,

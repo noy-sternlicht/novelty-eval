@@ -174,8 +174,16 @@ def _selfjudge(p: Path) -> None:
     _run([f"{_M}.run_benchmark", "--config", str(p / "self_judge_subset.yaml")])
 
 
+def _baseline_sweeps(cfg: dict) -> list[str]:
+    """Paper-finder baseline sweep dirs: the two required ones plus any `extra_sweeps`.
+    """
+    return [cfg["pointwise_sweep"], cfg["pairwise_sweep"],
+            *[str(d) for d in (cfg.get("extra_sweeps") or [])]]
+
+
 def _score(cfg: dict, p: Path) -> None:
-    dirs = [cfg["pointwise_sweep"], cfg["pairwise_sweep"]]
+    baselines = _baseline_sweeps(cfg)
+    dirs = list(baselines)
     sj = _selfjudge_artifact_dir(p)
     if sj:
         dirs.append(sj)
@@ -183,7 +191,7 @@ def _score(cfg: dict, p: Path) -> None:
         LOGGER.info("No web-search self-judge run found yet — scoring baselines only.")
     _run([f"{_M}.retrieval_faceoff.subset_reports", *dirs, "--manifest", str(p / "manifest.json")])
     if sj:
-        _run([f"{_M}.retrieval_faceoff.divergence_report", cfg["pointwise_sweep"], cfg["pairwise_sweep"],
+        _run([f"{_M}.retrieval_faceoff.divergence_report", *baselines,
               "--reference", sj, "--manifest", str(p / "manifest.json"), "--root", str(p)])
     else:
         LOGGER.info("No web-search self-judge run found yet — skipping divergence report.")

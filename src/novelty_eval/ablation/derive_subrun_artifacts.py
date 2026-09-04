@@ -13,11 +13,20 @@ timestamped artifact dir, matching the structure of a real n_runs=3 sweep.
 The output directory can be passed directly to merge_ablation_runs.py
 alongside the original sweep directory.
 
+By default the source rows are the sweep's ``*_current`` ablations, and the
+``_current`` marker is stripped so the derived name reads e.g.
+``pairwise-vanilla-ai_mec_k_1``.  Any other ablation can be the source via
+--source-suffix; pair it with --keep-source-suffix when the suffix names a real
+property of the judge rather than "this is the baseline", so that deriving from
+``pointwise-vanilla-ai_retrieval`` yields ``pointwise-vanilla-ai_retrieval_mec_k_1``
+rather than dropping the retrieval part (and colliding with the _current-derived run).
+
 Usage:
     python derive_subrun_artifacts.py <sweep_dir1> [<sweep_dir2> ...] \\
         [--output-dir PATH] \\
         [--ablations mec_k_1 unidirectional] \\
-        [--n-subsamples 3]
+        [--n-subsamples 3] \\
+        [--source-suffix _current] [--keep-source-suffix]
 
 Example:
     python derive_subrun_artifacts.py \\
@@ -514,12 +523,27 @@ def _derive_pointwise_artifact(
     return new_art_dir
 
 
+def _track_name(source_ablation_name: str, source_suffix: str, keep_source_suffix: bool) -> str:
+    """The derived ablation's prefix: the source name, minus its suffix unless kept.
+
+    Stripping keeps ``X_current`` → ``X_mec_k_1`` (the suffix only marked the
+    baseline).  Keeping is right when the suffix names a real judge property, so
+    ``X_retrieval`` → ``X_retrieval_mec_k_1`` stays distinguishable from the run
+    derived off ``X_current``.
+    """
+    if keep_source_suffix or not source_suffix or not source_ablation_name.endswith(source_suffix):
+        return source_ablation_name
+    return source_ablation_name[: -len(source_suffix)]
+
+
 def derive_for_artifact_dir(
     source_art_dir: Path,
     source_ablation_name: str,
     target_ablation: str,
     output_root: Path,
     n_subsamples: int = 3,
+    source_suffix: str = "_current",
+    keep_source_suffix: bool = False,
 ) -> Path | None:
     """Derive sub-run artifact dir from a single source artifact dir."""
     cfg = ABLATION_CONFIGS[target_ablation]
@@ -534,7 +558,7 @@ def derive_for_artifact_dir(
     model = _extract_model(source_art_dir)
 
     # e.g. "pairwise-vanilla-ai_current" → "pairwise-vanilla-ai_mec_k_1"
-    track = source_ablation_name.rsplit("_current", 1)[0] if "_current" in source_ablation_name else source_ablation_name
+    track = _track_name(source_ablation_name, source_suffix, keep_source_suffix)
     new_ablation_name = f"{track}_{target_ablation}"
 
     if mode == "pairwise":
@@ -577,6 +601,17 @@ def main() -> int:
         "--n-subsamples", type=int, default=3,
         help="Number of independent sub-runs to extract per ablation (default: 3)",
     )
+    ap.add_argument(
+        "--source-suffix", default="_current",
+        help="Derive from the sweep rows whose ablation name ends with this "
+             "(default: _current; pass '' to use every row)",
+    )
+    ap.add_argument(
+        "--keep-source-suffix", action="store_true",
+        help="Keep --source-suffix in the derived ablation name instead of stripping it. "
+             "Use it when the suffix names a judge property (e.g. _retrieval) rather than "
+             "marking the baseline, so the derived run stays distinguishable.",
+    )
     args = ap.parse_args()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -606,10 +641,10 @@ def main() -> int:
 
         current_rows = [
             r for r in summary.get("runs", [])
-            if str(r.get("ablation", "")).endswith("_current")
+            if str(r.get("ablation", "")).endswith(args.source_suffix)
         ]
         if not current_rows:
-            print(f"Warning: No '_current' rows in {source_dir} — skipping")
+            print(f"Warning: No '{args.source_suffix}' rows in {source_dir} — skipping")
             continue
 
         print(f"\n{source_dir.name}")
@@ -629,6 +664,8 @@ def main() -> int:
                         target_ablation=target_ablation,
                         output_root=output_dir,
                         n_subsamples=args.n_subsamples,
+                        source_suffix=args.source_suffix,
+                        keep_source_suffix=args.keep_source_suffix,
                     )
                     if new_dir:
                         collected[(source_ablation_name, target_ablation)].append(str(new_dir))
@@ -636,11 +673,7 @@ def main() -> int:
     # Build and write ablation_summary.json
     runs: list[dict] = []
     for (source_ablation_name, target_ablation), art_dirs in sorted(collected.items()):
-        track = (
-            source_ablation_name.rsplit("_current", 1)[0]
-            if "_current" in source_ablation_name
-            else source_ablation_name
-        )
+        track = _track_name(source_ablation_name, args.source_suffix, args.keep_source_suffix)
         new_ablation_name = f"{track}_{target_ablation}"
         runs.append({
             "ablation": new_ablation_name,

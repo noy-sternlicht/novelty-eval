@@ -34,6 +34,7 @@ from utils import LOGGER as LOGGER  # reassigned to a file logger in main() once
 from logging_utils import setup_logger
 from novelty_eval.analysis.artifacts import (
     _collect_artifact_dirs,
+    _extract_ablation_from_artifact_dir,
     _extract_instances_path,
     _extract_mode_from_artifact_dir,
     _extract_model_from_artifact_dir,
@@ -97,8 +98,10 @@ def _score_dir(artifact_dir: Path, keep_pointwise: Set[str], keep_pairwise: Set[
     out_path = _write_filtered_accuracy_report(
         artifact_dir, mode, metrics, original_report, out_filename=report_name)
     model = _extract_model_from_artifact_dir(artifact_dir)
-    LOGGER.info(f"[{mode}] {model}: support={metrics['support']:.0f} → {out_path}")
-    return {"artifact_dir": str(artifact_dir), "mode": mode, "model": model, "metrics": metrics}
+    config = _extract_ablation_from_artifact_dir(artifact_dir)
+    LOGGER.info(f"[{mode}] {config} / {model}: support={metrics['support']:.0f} → {out_path}")
+    return {"artifact_dir": str(artifact_dir), "mode": mode, "model": model,
+            "config": config, "metrics": metrics}
 
 
 def _write_comparison_md(rows: List[dict], out_path: Path, manifest: dict) -> None:
@@ -113,30 +116,36 @@ def _write_comparison_md(rows: List[dict], out_path: Path, manifest: dict) -> No
         f"{manifest['blocklist']['n_pairs_dropped']} pair(s) dropped by blocklist.",
         "",
     ]
+    # Group by config, ranked within each: the same model can appear under several
+    # configurations (e.g. a k=3 sweep and the k=1 sub-runs derived from it), so the
+    # model name alone no longer identifies a row.
+    def _by_config(rows: List[dict], metric: str):
+        return sorted(rows, key=lambda x: (x.get("config", ""), -x["metrics"][metric]))
+
     if pw:
         lines += [
             "## Pointwise (binary novelty classification)",
             "",
-            "| Judge / model | Support | Accuracy | F1 macro | F1 POS | F1 NEG |",
-            "|---|---|---|---|---|---|",
+            "| Config | Judge / model | Support | Accuracy | F1 macro | F1 POS | F1 NEG |",
+            "|---|---|---|---|---|---|---|",
         ]
-        for r in sorted(pw, key=lambda x: -x["metrics"]["accuracy"]):
+        for r in _by_config(pw, "accuracy"):
             m = r["metrics"]
             lines.append(
-                f"| {r['model']} | {m['support']:.0f} | {m['accuracy']:.4f} | "
+                f"| {r.get('config', '')} | {r['model']} | {m['support']:.0f} | {m['accuracy']:.4f} | "
                 f"{m['f1_macro']:.4f} | {m['f1_pos']:.4f} | {m['f1_neg']:.4f} |")
         lines.append("")
     if pr:
         lines += [
             "## Pairwise (preference / winner selection)",
             "",
-            "| Judge / model | Support | Acc (with ties) | Acc (w/o ties) | Ties |",
-            "|---|---|---|---|---|",
+            "| Config | Judge / model | Support | Acc (with ties) | Acc (w/o ties) | Ties |",
+            "|---|---|---|---|---|---|",
         ]
-        for r in sorted(pr, key=lambda x: -x["metrics"]["pairwise_accuracy"]):
+        for r in _by_config(pr, "pairwise_accuracy"):
             m = r["metrics"]
             lines.append(
-                f"| {r['model']} | {m['support']:.0f} | {m['pairwise_accuracy']:.4f} | "
+                f"| {r.get('config', '')} | {r['model']} | {m['support']:.0f} | {m['pairwise_accuracy']:.4f} | "
                 f"{m['pairwise_accuracy_no_ties']:.4f} | {m['n_ties']:.1f} |")
         lines.append("")
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

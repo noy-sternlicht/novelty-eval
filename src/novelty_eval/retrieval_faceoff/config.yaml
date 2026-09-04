@@ -14,6 +14,11 @@ pairwise: data/human-plus-generated/pairwise.yaml
 pointwise_sweep: output/ablation_sweeps/20260623_112217
 pairwise_sweep: output/ablation_sweeps/20260623_110753
 
+# Additional sweep dirs to score on the same subset. Rows are labelled by ablation
+# Point this at a stable --output-dir; derive defaults to a fresh derived_{timestamp}.
+extra_sweeps:
+  - output/ablation_sweeps/derived_retrieval_k1
+
 # --- Sampling ---
 n_pairs: 160
 seed: 0
