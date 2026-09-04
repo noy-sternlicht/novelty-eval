@@ -67,14 +67,19 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
 
     # ── OpenAI ────────────────────────────────────────────────────────────────
     # Confirmed from pricing page (cached_input = 10% of input for gpt-5.x series)
-    # gpt-5.6 family: Sol (flagship), Terra (balanced), Luna (cost-optimized).
-    # Specific -sol/-terra/-luna keys kept BEFORE the "gpt-5.6" alias so a future
-    # dated snapshot (e.g. "gpt-5.6-terra-2026-08-01") prefix-matches its own
-    # variant rather than falling through to the alias (which mirrors -sol).
-    "gpt-5.6-sol":       {"input":  5.00, "cached_input":  0.500, "cache_creation": None, "output": 30.00},
-    "gpt-5.6-terra":     {"input":  2.50, "cached_input":  0.250, "cache_creation": None, "output": 15.00},
-    "gpt-5.6-luna":      {"input":  1.00, "cached_input":  0.100, "cache_creation": None, "output":  6.00},
-    "gpt-5.6":           {"input":  5.00, "cached_input":  0.500, "cache_creation": None, "output": 30.00},  # alias -> gpt-5.6-sol
+    # gpt-5.6 family: Sol (flagship), Terra (balanced), Luna (cost-optimized),
+    # Cyber (security). Sol/Terra/Luna are on promotional pricing, listed as
+    # available at least through 2026-11-21 — recheck the pricing page after that.
+    # Specific -sol/-terra/-luna/-cyber keys kept BEFORE the "gpt-5.6" alias so a
+    # future dated snapshot (e.g. "gpt-5.6-terra-2026-08-01") prefix-matches its
+    # own variant rather than falling through to the alias (which mirrors -sol).
+    # Rates below are the standard tier; sol/terra/luna also have a long-context
+    # tier (>272K input tokens) that this table does not model.
+    "gpt-5.6-sol":       {"input":  4.00, "cached_input":  0.400, "cache_creation":   None, "output": 20.00},
+    "gpt-5.6-terra":     {"input":  2.00, "cached_input":  0.200, "cache_creation":   None, "output": 12.00},
+    "gpt-5.6-luna":      {"input":  0.20, "cached_input":  0.020, "cache_creation":   None, "output":  1.20},
+    "gpt-5.6-cyber":     {"input": 12.50, "cached_input":  1.250, "cache_creation": 15.625, "output": 75.00},
+    "gpt-5.6":           {"input":  4.00, "cached_input":  0.400, "cache_creation":   None, "output": 20.00},  # alias -> gpt-5.6-sol
     "gpt-5.4":           {"input":  2.50, "cached_input":  0.250, "cache_creation": None, "output": 15.00},
     "gpt-5.4-mini":      {"input":  0.75, "cached_input":  0.075, "cache_creation": None, "output":  4.50},
     "gpt-5.4-nano":      {"input":  0.20, "cached_input":  0.020, "cache_creation": None, "output":  1.25},
