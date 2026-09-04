@@ -1,4 +1,8 @@
-"""Prepare one xlsx annotation batch per annotator, plus the decoding key.
+"""Prepare one annotation batch per annotator, plus the decoding key.
+
+Each annotator gets the same batch three ways -- an xlsx to fill in, an HTML page
+to annotate in a browser, and an Apps Script that builds their Google Form for
+annotating on a phone -- so they can pick whichever route suits them.
 
 A batch is built from named groups, each drawing on its own judge run: the
 mistakes under study, controls the judge got right, hard pairs a strong judge
@@ -30,6 +34,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from novelty_eval.judge_error_annotation.annotation_page import write_annotation_page
+from novelty_eval.judge_error_annotation.google_form_export import build_apps_script
 from novelty_eval.judge_error_annotation.selection import (
     ScoredInstance,
     is_judge_mistake,
@@ -342,7 +347,16 @@ def main():
         out = cfg.out_dir / f"{name}.xlsx"
         write_annotator_xlsx(out, rows)
         write_annotation_page(out.with_suffix(".html"), name, rows, CHOICES, INSTRUCTIONS)
-        print(f"  {out}  (+ .html) ({mix}){same}")
+        # A third route to the same batch: an Apps Script the batch owner runs
+        # once to build this annotator's Google Form, for annotating on a phone.
+        script = out.with_name(f"{name}_form.gs")
+        script.write_text(
+            # One scrolling page, like the CLI's default: with page breaks Submit
+            # is only reachable after tapping Next through every pair.
+            build_apps_script(name, rows, CHOICES, INSTRUCTIONS, pairs_per_page=0),
+            encoding="utf-8",
+        )
+        print(f"  {out}  (+ .html, + _form.gs) ({mix}){same}")
 
     key_path = cfg.out_dir / "key.xlsx"
     write_key_xlsx(key_path, batches)
