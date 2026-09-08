@@ -16,6 +16,7 @@ drawing is shared and only the wording is theirs.
 """
 
 import json
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -168,8 +169,21 @@ CELL_IN = 0.44                    # height of one ablation row
 STRIP_ROWS = 0.56                 # baseline strip height, in rows — shorter than
                                   # a data row, so it reads as a header
 GUTTER_IN = 0.17                  # between the two blocks
-MARGIN_IN = {"left": 1.51,        # room for the row names and the axis title
+MARGIN_IN = {"left": 1.51,        # room for the row names and the axis title,
+                                  # widened at draw time if a name needs more
              "right": 0.05, "top": 0.35, "bottom": 0.61}
+EDGE_IN = 0.04                    # gap kept between the longest name and the edge
+
+# A row group's bracket, drawn in the left margin outside the row names. Every
+# offset is in inches from the left block's edge, measured outwards: names,
+# gap, bracket, gap, rotated group name.
+GROUP_GAP_IN = 0.06               # between the longest row name and the bracket
+GROUP_TICK_IN = 0.045             # the bracket's end ticks, pointing at the rows
+GROUP_NAME_GAP_IN = 0.05          # between the bracket and the group name
+GROUP_INSET = 0.10                # rows the bracket stops short of its span, so
+                                  # it reads as a span rather than a cell border
+GROUP_COLOUR = "#8a94a6"
+LABELPAD_IN = 5 / 72              # the axis title's labelpad, in inches
 
 
 @dataclass
@@ -186,20 +200,31 @@ class TwoTrackFigure:
 
     tracks: (block title, merge dir under output/ablation_sweeps, name token),
         left to right. The token fills {track} in a row name.
-    rows: (panel name, row label), top to bottom. {setup} and {track} expand,
-        for ablations whose instance set differs per track or per setup.
+    rows: (panel name, row label), top to bottom, with an optional third
+        element naming the setups the row belongs to — an ablation only one
+        setup was run for is left out of the other rather than drawn as a row
+        of dashes. {setup} and {track} expand in the panel name, for ablations
+        whose instance set differs per track or per setup.
     metrics: the metric to read per setup — the two setups score different
         things. It lands in the filename, never on the figure, so the caption
         has to say which it is.
+    row_groups: (group label, panel names in it) — a bracket in the left margin
+        naming what its rows have in common. Named by panel name rather than by
+        position, so a setup that draws only some of a group's rows brackets
+        what it actually drew; a group whose rows are not drawn together is a
+        mistake in the figure, not something to draw around, so it raises. A
+        group label of "" draws the bracket unnamed, for a group too short to
+        set the name beside.
     """
 
     root: Path
     figure: str                       # output subdirectory and filename prefix
     tracks: Sequence[tuple[str, str, str]]
-    rows: Sequence[tuple[str, str]]
+    rows: Sequence[tuple]             # (panel name, row label[, setups])
     models: Sequence[str]
     metrics: Mapping[str, str]
     row_axis_label: str
+    row_groups: Sequence[tuple] = ()  # (group label, panel names in it)
     baseline_label: str = "baseline"  # the un-ablated strip, named like a row
     col_axis_label: str = "Judge model"
     variant: str = "filtered"         # which accuracy report: filtered | unfiltered
@@ -207,10 +232,37 @@ class TwoTrackFigure:
         default_factory=lambda: dict(MODEL_LABELS))
     width: float = 7.1                # figure width, inches
 
-    @property
-    def labels(self) -> list:
-        """Row labels, top to bottom."""
-        return [label for _, label in self.rows]
+    def rows_for(self, setup: str) -> list:
+        """The (panel name, row label) rows one setup draws, top to bottom."""
+        return [(name, label) for name, label, *setups in self.rows
+                if not setups or setup in setups[0]]
+
+    def labels_for(self, setup: str) -> list:
+        """Row labels of one setup, top to bottom."""
+        return [label for _, label in self.rows_for(setup)]
+
+    def group_spans(self, setup: str) -> list:
+        """
+        (group label, first row, last row) for the groups one setup draws.
+
+        Row indices are into `rows_for(setup)`, so a group the setup only
+        partly drew brackets the part it drew. A group with no drawn rows is
+        left out; one whose drawn rows are not adjacent raises, because a
+        bracket over them would claim a grouping the figure does not have.
+        """
+        drawn = [name for name, _ in self.rows_for(setup)]
+        spans = []
+        for label, names in self.row_groups:
+            at = [i for i, name in enumerate(drawn) if name in set(names)]
+            if not at:
+                continue
+            if at != list(range(at[0], at[-1] + 1)):
+                raise ValueError(
+                    f"row group {label!r} is not drawn as adjacent rows in "
+                    f"{setup}: rows {at}. Reorder `rows` so the group is "
+                    f"contiguous, or drop the group.")
+            spans.append((label, at[0], at[-1]))
+        return spans
 
     @property
     def judges(self) -> list:
@@ -231,7 +283,7 @@ class TwoTrackFigure:
         recs = []
         for title, merge_dir, token in self.tracks:
             ps = self.panels(merge_dir, setup)
-            for name, label in self.rows:
+            for name, label in self.rows_for(setup):
                 panel = ps.get(name.format(setup=setup, track=token))
                 for model in self.models:
                     if panel is None or (name, model) in UNSUPPORTED_CELLS:
@@ -283,10 +335,11 @@ class TwoTrackFigure:
         import matplotlib.pyplot as plt
         import numpy as np
         import pandas as pd
+        from matplotlib.transforms import blended_transform_factory
 
         plt.rcParams.update({"font.family": "sans-serif", **PDF_RCPARAMS})
         df = self.table(setup)
-        labels, judges = self.labels, self.judges
+        labels, judges = self.labels_for(setup), self.judges
         cmap = delta_cmap()
 
         if absolute:
@@ -405,7 +458,77 @@ class TwoTrackFigure:
             axes[0].get_yticklabels()[0].set(style="italic", color="#555555")
         axes[0].set_ylabel(self.row_axis_label, fontsize=7.2, fontweight="bold",
                            color="#333333", labelpad=5)
-        fig.text((MARGIN_IN["left"] + blocks_in / 2) / self.width, 0.12 / fig_h,
+
+        # Group names are drawn now and positioned after the figure has been
+        # widened, because their width is part of what it must be widened by.
+        # A name set beside a group shorter than the name itself would run into
+        # its neighbours, so that group keeps the bracket and loses the name.
+        spans = self.group_spans(setup)
+        names = []                   # one per span, None where the group is unnamed
+        for label, i0, i1 in spans:
+            if not label:
+                names.append(None)
+                continue
+            t = axes[0].text(0, (i0 + i1) / 2 + 1.5, label, rotation=90,
+                             ha="center", va="center", fontsize=6.4,
+                             fontweight="bold", color=GROUP_COLOUR,
+                             clip_on=False)
+            box = t.get_window_extent(fig.canvas.get_renderer())
+            if box.height / fig.dpi > (i1 - i0 + 1) * CELL_IN:
+                warnings.warn(f"row group {label!r} is {i1 - i0 + 1} row(s) tall,"
+                              " too short to set its name beside: drawing the"
+                              " bracket unnamed.")
+                t.remove()
+                t = None
+            names.append(t)
+        widths = [t.get_window_extent(fig.canvas.get_renderer()).width / fig.dpi
+                  for t in names if t is not None]
+        name_in = max(widths, default=0.0)
+        group_in = 0.0 if not spans else (
+            GROUP_GAP_IN + GROUP_TICK_IN
+            + (GROUP_NAME_GAP_IN + name_in if widths else 0.0))
+
+        # The left margin is room for the row names and their brackets, and a
+        # name longer than it would run off the page. Measure what the finished
+        # labels take and widen the figure by the overrun, so no name is cut and
+        # every cell keeps the size it was given.
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        overrun = -min(ax.get_tightbbox(renderer).x0 for ax in axes) / fig.dpi
+        left_in = MARGIN_IN["left"] + max(0.0, overrun + group_in + EDGE_IN)
+        width = self.width + (left_in - MARGIN_IN["left"])
+        if width > self.width:
+            fig.set_size_inches(width, fig_h)
+            gs.update(left=left_in / width, right=1 - MARGIN_IN["right"] / width)
+
+        # Now the block is its final width, so an offset in inches is a fixed
+        # fraction of it: the bracket sits just outside the longest row name,
+        # the name just outside the bracket, and the axis title outside both.
+        if spans:
+            fig.canvas.draw()
+            renderer = fig.canvas.get_renderer()
+            ax0 = axes[0]
+            block_px = ax0.get_window_extent(renderer).width
+            rows_in = (ax0.get_window_extent(renderer).x0
+                       - min(t.get_window_extent(renderer).x0
+                             for t in ax0.get_yticklabels())) / fig.dpi
+            out = lambda dx_in: -(rows_in + dx_in) * fig.dpi / block_px
+            trans = blended_transform_factory(ax0.transAxes, ax0.transData)
+            spine, tick = out(GROUP_GAP_IN + GROUP_TICK_IN), out(GROUP_GAP_IN)
+            line = dict(transform=trans, color=GROUP_COLOUR, linewidth=0.8,
+                        clip_on=False, solid_capstyle="round", zorder=5)
+            for (_, i0, i1), t in zip(spans, names):
+                y0, y1 = i0 + 1 + GROUP_INSET, i1 + 2 - GROUP_INSET
+                ax0.plot([spine, spine], [y0, y1], **line)
+                ax0.plot([spine, tick], [y0, y0], **line)
+                ax0.plot([spine, tick], [y1, y1], **line)
+                if t is not None:
+                    t.set_x(out(GROUP_GAP_IN + GROUP_TICK_IN
+                                + GROUP_NAME_GAP_IN + name_in / 2))
+                    t.set_transform(trans)
+            axes[0].yaxis.set_label_coords(out(group_in + LABELPAD_IN), 0.5)
+
+        fig.text((left_in + blocks_in / 2) / width, 0.12 / fig_h,
                  self.col_axis_label, ha="center", va="bottom", fontsize=7.2,
                  fontweight="bold", color="#333333")
 
