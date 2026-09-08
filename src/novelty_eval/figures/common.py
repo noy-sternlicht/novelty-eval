@@ -24,6 +24,13 @@ from typing import Mapping, Sequence
 # Type 3 fonts are rejected by many venues; 42 embeds TrueType instead.
 PDF_RCPARAMS = {"pdf.fonttype": 42, "ps.fonttype": 42}
 
+# The paper's typeface rather than the plotting library's: matplotlib's DejaVu
+# Sans reads as a default, and a figure set in it looks unlike the page it sits
+# on. Names are tried in turn, so a machine without the first still gets a
+# grotesque instead of falling back to DejaVu. The same stack as the other
+# figure notebooks, so no two figures in the paper are set differently.
+FONT_STACK = ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"]
+
 # Diverging red → off-white → green, for a delta centred on zero.
 DELTA_COLORS = ["#d64045", "#f7f4ef", "#3d9970"]
 
@@ -171,18 +178,23 @@ STRIP_ROWS = 0.56                 # baseline strip height, in rows — shorter t
 GUTTER_IN = 0.17                  # between the two blocks
 MARGIN_IN = {"left": 1.51,        # room for the row names and the axis title,
                                   # widened at draw time if a name needs more
-             "right": 0.05, "top": 0.35, "bottom": 0.61}
+             "right": 0.05, "top": 0.35, "bottom": 0.42}
 EDGE_IN = 0.04                    # gap kept between the longest name and the edge
 
 # A row group's bracket, drawn in the left margin outside the row names. Every
 # offset is in inches from the left block's edge, measured outwards: names,
-# gap, bracket, gap, rotated group name.
+# gap, bracket. The group's own name sits *on* the bracket, in a chip that
+# hides the line behind it, the way the block titles sit above the blocks — so
+# it costs the margin only the width of the chip rather than a column of its
+# own, and cannot be read as belonging to a row.
 GROUP_GAP_IN = 0.06               # between the longest row name and the bracket
 GROUP_TICK_IN = 0.045             # the bracket's end ticks, pointing at the rows
-GROUP_NAME_GAP_IN = 0.05          # between the bracket and the group name
+GROUP_LABEL_PAD = 0.16            # the chip's padding, in units of its font size
+GROUP_LABEL_ROUND = 0.16          # its corner radius, same units
 GROUP_INSET = 0.10                # rows the bracket stops short of its span, so
                                   # it reads as a span rather than a cell border
 GROUP_COLOUR = "#8a94a6"
+GROUP_LABEL_BG = "#eef1f5"        # the chip behind a group name, as the titles
 LABELPAD_IN = 5 / 72              # the axis title's labelpad, in inches
 
 
@@ -337,7 +349,8 @@ class TwoTrackFigure:
         import pandas as pd
         from matplotlib.transforms import blended_transform_factory
 
-        plt.rcParams.update({"font.family": "sans-serif", **PDF_RCPARAMS})
+        plt.rcParams.update({"font.family": "sans-serif",
+                             "font.sans-serif": FONT_STACK, **PDF_RCPARAMS})
         df = self.table(setup)
         labels, judges = self.labels_for(setup), self.judges
         cmap = delta_cmap()
@@ -408,10 +421,14 @@ class TwoTrackFigure:
             ax.set_xlim(0, len(judges))
             ax.set_ylim(len(labels) + 1, strip_top)      # baseline on top
 
+            # Weight is significance and nothing else: a bold number is a
+            # change the bootstrap called significant, so the eye finds them
+            # without reading a single asterisk. Everything that is not such a
+            # claim — the baseline, the absolute reading — is set regular.
             for j, judge in enumerate(judges):
                 ax.text(j + 0.5, (strip_top + 1) / 2, f"{base[judge]:.1f}",
                         ha="center", va="center",
-                        fontsize=7.0 if absolute else 6.4, fontweight="bold",
+                        fontsize=7.0 if absolute else 6.4,
                         color=text_colour(base[judge]) if absolute else "#333333")
                 for i, label in enumerate(labels):
                     d, a = delta.loc[label, judge], ablated.loc[label, judge]
@@ -425,23 +442,26 @@ class TwoTrackFigure:
                         # The score alone. Significance is a claim about the
                         # change, so it is marked where the change is drawn.
                         ax.text(j + 0.5, i + 1.5, f"{a:.1f}", ha="center",
-                                va="center", fontsize=7.0, fontweight="bold",
-                                color=colour)
+                                va="center", fontsize=7.0, color=colour)
                         continue
-                    star = "*" if sig.loc[label, judge] else ""
+                    marked = bool(sig.loc[label, judge])
+                    star = "*" if marked else ""
                     ax.text(j + 0.5, i + 1.32, f"{d:+.1f}{star}", ha="center",
-                            va="center", fontsize=6.6, fontweight="bold",
+                            va="center", fontsize=7,
+                            fontweight="bold" if marked else "normal",
                             color=colour)
                     # Italic, so the absolute never reads as a second delta.
                     ax.text(j + 0.5, i + 1.68, f"({a:.1f})", ha="center",
-                            va="center", fontsize=5.4, style="italic",
+                            va="center", fontsize=5.4,
                             color=colour, alpha=0.72)
 
-            ax.set_xticks(np.arange(len(judges)) + 0.5, judges, fontsize=6.2,
-                          rotation=38, ha="right", rotation_mode="anchor")
+            # Set horizontally: the longest judge name is narrower than a cell
+            # at this size, so there is nothing for a rotation to rescue, and a
+            # column header the eye has to tilt for is one it reads slowly.
+            ax.set_xticks(np.arange(len(judges)) + 0.5, judges, fontsize=5.8)
             ax.set_yticks(
                 [(strip_top + 1) / 2] + [i + 1.5 for i in range(len(labels))],
-                [self.baseline_label] + labels, fontsize=6.6)
+                [self.baseline_label] + labels, fontsize=7)
             ax.set_title(title, fontsize=8, fontweight="bold", pad=8.5,
                          bbox=dict(boxstyle="round,pad=0.35", fc="#eef1f5",
                                    ec="none"))
@@ -461,8 +481,9 @@ class TwoTrackFigure:
 
         # Group names are drawn now and positioned after the figure has been
         # widened, because their width is part of what it must be widened by.
-        # A name set beside a group shorter than the name itself would run into
-        # its neighbours, so that group keeps the bracket and loses the name.
+        # The chip interrupts its own bracket, so a group shorter than its name
+        # would have nothing of the bracket left to read: that group keeps the
+        # bracket and loses the name.
         spans = self.group_spans(setup)
         names = []                   # one per span, None where the group is unnamed
         for label, i0, i1 in spans:
@@ -472,21 +493,25 @@ class TwoTrackFigure:
             t = axes[0].text(0, (i0 + i1) / 2 + 1.5, label, rotation=90,
                              ha="center", va="center", fontsize=6.4,
                              fontweight="bold", color=GROUP_COLOUR,
-                             clip_on=False)
+                             clip_on=False, zorder=6,
+                             bbox=dict(boxstyle=f"round,pad={GROUP_LABEL_PAD},"
+                                                f"rounding_size={GROUP_LABEL_ROUND}",
+                                       fc=GROUP_LABEL_BG, ec="none"))
             box = t.get_window_extent(fig.canvas.get_renderer())
-            if box.height / fig.dpi > (i1 - i0 + 1) * CELL_IN:
+            chip_in = 2 * GROUP_LABEL_PAD * t.get_fontsize() / 72
+            if (box.height / fig.dpi) + chip_in > (i1 - i0 + 1) * CELL_IN:
                 warnings.warn(f"row group {label!r} is {i1 - i0 + 1} row(s) tall,"
-                              " too short to set its name beside: drawing the"
+                              " too short to set its name on: drawing the"
                               " bracket unnamed.")
                 t.remove()
                 t = None
             names.append(t)
-        widths = [t.get_window_extent(fig.canvas.get_renderer()).width / fig.dpi
+        # The chip straddles the bracket, so only its half sticks out past it.
+        halves = [(t.get_window_extent(fig.canvas.get_renderer()).width / fig.dpi
+                   + 2 * GROUP_LABEL_PAD * t.get_fontsize() / 72) / 2
                   for t in names if t is not None]
-        name_in = max(widths, default=0.0)
         group_in = 0.0 if not spans else (
-            GROUP_GAP_IN + GROUP_TICK_IN
-            + (GROUP_NAME_GAP_IN + name_in if widths else 0.0))
+            GROUP_GAP_IN + GROUP_TICK_IN + max(halves, default=0.0))
 
         # The left margin is room for the row names and their brackets, and a
         # name longer than it would run off the page. Measure what the finished
@@ -523,8 +548,7 @@ class TwoTrackFigure:
                 ax0.plot([spine, tick], [y0, y0], **line)
                 ax0.plot([spine, tick], [y1, y1], **line)
                 if t is not None:
-                    t.set_x(out(GROUP_GAP_IN + GROUP_TICK_IN
-                                + GROUP_NAME_GAP_IN + name_in / 2))
+                    t.set_x(spine)          # centred on the line it interrupts
                     t.set_transform(trans)
             axes[0].yaxis.set_label_coords(out(group_in + LABELPAD_IN), 0.5)
 
