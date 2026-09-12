@@ -172,21 +172,38 @@ WHITE_TEXT_BAND = (0.25, 0.82)
 
 # Layout in inches, so a cell is the size it says it is. Every gap on the page
 # is one number here: no layout engine to reverse-engineer when it looks wrong.
-CELL_IN = 0.44                    # height of one ablation row
+CELL_IN = 0.36                    # height of one ablation row: two lines of cell
+                                  # text, the change over the score it landed on
 STRIP_ROWS = 0.56                 # baseline strip height, in rows — shorter than
                                   # a data row, so it reads as a header
 GUTTER_IN = 0.17                  # between the two blocks
 MARGIN_IN = {"left": 1.51,        # room for the row names and the axis title,
-                                  # widened at draw time if a name needs more
-             "right": 0.05, "top": 0.35, "bottom": 0.42}
-EDGE_IN = 0.04                    # gap kept between the longest name and the edge
+                                  # resized at draw time to what they take
+                                  # top: the block title; bottom: the judge
+                                  # names and the axis title under them
+                                  # Both are what their type measures plus the
+                                  # gap it needs, and nothing over: the figure
+                                  # ends EDGE_IN past its outermost ink on
+                                  # every side, so a trimmed edge is the same
+                                  # width all round. What bottom holds over the
+                                  # type is the air between the judge names and
+                                  # the row under them, near enough the gap the
+                                  # title's `pad` leaves above the blocks: the
+                                  # grid sits in the same white top and bottom
+             "right": 0.04, "top": 0.25, "bottom": 0.34}
+EDGE_IN = 0.04                    # gap kept between the longest name and the
+                                  # edge, and what every other edge leaves too:
+                                  # the figure is trimmed, not padded, so the
+                                  # page around it is the document's to set
+XLABEL_IN = 0.04                  # the column axis title, up from the bottom
 
 # A row group's bracket, drawn in the left margin outside the row names. Every
 # offset is in inches from the left block's edge, measured outwards: names,
 # gap, bracket. The group's own name sits *on* the bracket, in a chip that
-# hides the line behind it, the way the block titles sit above the blocks — so
-# it costs the margin only the width of the chip rather than a column of its
-# own, and cannot be read as belonging to a row.
+# hides the line behind it — so it costs the margin only the width of the chip
+# rather than a column of its own, and cannot be read as belonging to a row.
+# The chip is what makes the interruption read as deliberate, so this is the
+# one shaded label left on the page; the block titles are plain text.
 GROUP_GAP_IN = 0.06               # between the longest row name and the bracket
 GROUP_TICK_IN = 0.045             # the bracket's end ticks, pointing at the rows
 GROUP_LABEL_PAD = 0.16            # the chip's padding, in units of its font size
@@ -239,6 +256,11 @@ class TwoTrackFigure:
     row_groups: Sequence[tuple] = ()  # (group label, panel names in it)
     baseline_label: str = "baseline"  # the un-ablated strip, named like a row
     col_axis_label: str = "Judge model"
+    sig_note: str = "* significant at 95% (bootstrap)"
+                                      # the key to the marked cells, set in the
+                                      # bottom margin beside the column title.
+                                      # Delta reading only — the absolute one
+                                      # marks nothing — and "" drops it
     variant: str = "filtered"         # which accuracy report: filtered | unfiltered
     model_labels: Mapping[str, str] = field(
         default_factory=lambda: dict(MODEL_LABELS))
@@ -446,13 +468,16 @@ class TwoTrackFigure:
                         continue
                     marked = bool(sig.loc[label, judge])
                     star = "*" if marked else ""
-                    ax.text(j + 0.5, i + 1.32, f"{d:+.1f}{star}", ha="center",
-                            va="center", fontsize=7,
+                    # The two lines sit close enough to read as one cell: the
+                    # row is only just taller than they are, so the gap between
+                    # rows has to stay the widest white on the page.
+                    ax.text(j + 0.5, i + 1.34, f"{d:+.1f}{star}", ha="center",
+                            va="center", fontsize=6.8,
                             fontweight="bold" if marked else "normal",
                             color=colour)
                     # Italic, so the absolute never reads as a second delta.
-                    ax.text(j + 0.5, i + 1.68, f"({a:.1f})", ha="center",
-                            va="center", fontsize=5.4,
+                    ax.text(j + 0.5, i + 1.66, f"({a:.1f})", ha="center",
+                            va="center", fontsize=5.0,
                             color=colour, alpha=0.72)
 
             # Set horizontally: the longest judge name is narrower than a cell
@@ -462,9 +487,7 @@ class TwoTrackFigure:
             ax.set_yticks(
                 [(strip_top + 1) / 2] + [i + 1.5 for i in range(len(labels))],
                 [self.baseline_label] + labels, fontsize=7)
-            ax.set_title(title, fontsize=8, fontweight="bold", pad=8.5,
-                         bbox=dict(boxstyle="round,pad=0.35", fc="#eef1f5",
-                                   ec="none"))
+            ax.set_title(title, fontsize=8, fontweight="bold", pad=7)
             ax.tick_params(length=0, pad=2)
             for spine in ax.spines.values():
                 spine.set_visible(False)
@@ -490,8 +513,11 @@ class TwoTrackFigure:
             if not label:
                 names.append(None)
                 continue
+            # Set small: the chip hides the bracket behind it, and a short
+            # group has to keep enough line either side of the name to read as
+            # a span rather than as a label parked beside its rows.
             t = axes[0].text(0, (i0 + i1) / 2 + 1.5, label, rotation=90,
-                             ha="center", va="center", fontsize=6.4,
+                             ha="center", va="center", fontsize=5.8,
                              fontweight="bold", color=GROUP_COLOUR,
                              clip_on=False, zorder=6,
                              bbox=dict(boxstyle=f"round,pad={GROUP_LABEL_PAD},"
@@ -513,16 +539,19 @@ class TwoTrackFigure:
         group_in = 0.0 if not spans else (
             GROUP_GAP_IN + GROUP_TICK_IN + max(halves, default=0.0))
 
-        # The left margin is room for the row names and their brackets, and a
-        # name longer than it would run off the page. Measure what the finished
-        # labels take and widen the figure by the overrun, so no name is cut and
-        # every cell keeps the size it was given.
+        # The left margin is room for the row names and their brackets, and
+        # `MARGIN_IN["left"]` is only the guess the cells were sized against.
+        # Measure what the finished labels take and resize the figure by the
+        # difference — out where a name would otherwise be cut, in where the
+        # names are short and the slack would print as white. Either way the
+        # figure ends EDGE_IN past the longest name and every cell keeps the
+        # size it was given.
         fig.canvas.draw()
         renderer = fig.canvas.get_renderer()
         overrun = -min(ax.get_tightbbox(renderer).x0 for ax in axes) / fig.dpi
-        left_in = MARGIN_IN["left"] + max(0.0, overrun + group_in + EDGE_IN)
+        left_in = MARGIN_IN["left"] + overrun + group_in + EDGE_IN
         width = self.width + (left_in - MARGIN_IN["left"])
-        if width > self.width:
+        if abs(width - self.width) > 1e-3:
             fig.set_size_inches(width, fig_h)
             gs.update(left=left_in / width, right=1 - MARGIN_IN["right"] / width)
 
@@ -552,9 +581,19 @@ class TwoTrackFigure:
                     t.set_transform(trans)
             axes[0].yaxis.set_label_coords(out(group_in + LABELPAD_IN), 0.5)
 
-        fig.text((left_in + blocks_in / 2) / width, 0.12 / fig_h,
-                 self.col_axis_label, ha="center", va="bottom", fontsize=7.2,
+        fig.text((left_in + blocks_in / 2) / width, XLABEL_IN / fig_h,
+                 self.col_axis_label, ha="center", va="baseline", fontsize=7.2,
                  fontweight="bold", color="#333333")
+
+        # The key to the asterisk, on the column title's own baseline: that row
+        # of the bottom margin is empty either side of a centred title, so the
+        # key costs the figure no height at all. Set light and small, since a
+        # footnote that outweighs the axis title is a footnote in the wrong
+        # place. Only the delta reading marks anything to key.
+        if not absolute and self.sig_note:
+            fig.text(1 - MARGIN_IN["right"] / width, XLABEL_IN / fig_h,
+                     self.sig_note, ha="right", va="baseline", fontsize=5.8,
+                     color="#777777")
 
         stem = f"{self.figure}_{setup}_{self.variant}_{self.metrics[setup]}"
         out_dir = Path(self.root) / "output/figures" / self.figure
