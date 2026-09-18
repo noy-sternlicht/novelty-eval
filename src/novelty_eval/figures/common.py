@@ -100,11 +100,15 @@ def delta_cmap(bad: str = "#e2e8f0"):
     return cmap
 
 
-def save_figure(fig, out_path, formats=None, dpi: int = 300) -> "list[Path]":
+def save_figure(fig, out_path, formats=None, dpi: int = 300,
+                **savefig_kw) -> "list[Path]":
     """
     Write a figure to out_path plus any extra formats (by extension swap).
 
     Returns every path written. PDF output is vector; dpi only affects rasters.
+    Extra keywords go to `savefig` unchanged, and the same ones to every format,
+    so a figure trimmed to its ink (`bbox_inches="tight", pad_inches=EDGE_IN`)
+    is trimmed identically in the PDF and the PNG.
     """
     import matplotlib.pyplot as plt
 
@@ -118,7 +122,7 @@ def save_figure(fig, out_path, formats=None, dpi: int = 300) -> "list[Path]":
     out_path.parent.mkdir(parents=True, exist_ok=True)
     written = []
     for target in targets:
-        fig.savefig(str(target), dpi=dpi, facecolor="white")
+        fig.savefig(str(target), dpi=dpi, facecolor="white", **savefig_kw)
         written.append(target)
     plt.close(fig)
     return written
@@ -247,7 +251,8 @@ class TwoTrackFigure:
     """
 
     root: Path
-    figure: str                       # output subdirectory and filename prefix
+    figure: str                       # output subdirectory, and the filename
+                                      # prefix unless `file_prefix` gives one
     tracks: Sequence[tuple[str, str, str]]
     rows: Sequence[tuple]             # (panel name, row label[, setups])
     models: Sequence[str]
@@ -261,6 +266,11 @@ class TwoTrackFigure:
                                       # bottom margin beside the column title.
                                       # Delta reading only — the absolute one
                                       # marks nothing — and "" drops it
+    file_prefix: str = ""             # what the filenames start with, when that
+                                      # is not the subdirectory's name: two
+                                      # readings of one experiment belong in one
+                                      # directory and have to be told apart in
+                                      # it. "" prefixes them with `figure`
     variant: str = "filtered"         # which accuracy report: filtered | unfiltered
     model_labels: Mapping[str, str] = field(
         default_factory=lambda: dict(MODEL_LABELS))
@@ -595,7 +605,8 @@ class TwoTrackFigure:
                      self.sig_note, ha="right", va="baseline", fontsize=5.8,
                      color="#777777")
 
-        stem = f"{self.figure}_{setup}_{self.variant}_{self.metrics[setup]}"
+        prefix = self.file_prefix or self.figure
+        stem = f"{prefix}_{setup}_{self.variant}_{self.metrics[setup]}"
         out_dir = Path(self.root) / "output/figures" / self.figure
         out_path = out_dir / f"{stem}{'_absolute' if absolute else ''}.pdf"
         save_figure(fig, out_path, formats=["png"])
