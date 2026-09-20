@@ -66,7 +66,26 @@ def init_secrets():
 
 
 SECRETS = init_secrets()
-OPENAI_CLIENT = OpenAI(api_key=SECRETS.get('openai_key', None))
+
+
+class _LazyOpenAIClient:
+    """An OpenAI client built on first use, not on import.
+
+    Importing this module must not need credentials: the analysis and figure code
+    reaches it transitively (novelty_eval.judge -> utils) for helpers that never
+    call the API, and OpenAI() raises when no key is configured. Anything that does
+    call the API still gets the same error, at the first call instead of at import.
+    """
+
+    _client = None
+
+    def __getattr__(self, name):
+        if self._client is None:
+            self._client = OpenAI(api_key=SECRETS.get('openai_key', None))
+        return getattr(self._client, name)
+
+
+OPENAI_CLIENT = _LazyOpenAIClient()
 
 # Initialize Anthropic client lazily or if available
 ANTHROPIC_CLIENT = None
