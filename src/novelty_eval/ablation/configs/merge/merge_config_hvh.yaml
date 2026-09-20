@@ -19,8 +19,17 @@ dirs:
   # No evaluation criteria (pointwise + pairwise)
   - output/ablation_sweeps/20260609_120019
 
+# AI-Researcher Prompts (Pairwise)
+  - output/ablation_sweeps/20260903_145322
+  - output/ablation_sweeps/20260905_gpt54_retry
 
 output_dir: output/ablation_sweeps/merge_hvh_all_metrics
+
+
+tracks:
+  - pairwise-hvh
+  - pointwise-hvh
+
 
 
 
@@ -71,9 +80,15 @@ metrics:
 #     - low_judge_reasoning
 unified_chart:
   - name: vague_criterion
-    title: "Novelty Criterion"
+    title: "P1 · unguarded novelty criteria"
   - name: no_criteria_prompt
-    title: "No Criterion Prompt"
+    title: "P2 · No novelty criteria"
+  - name: ai_researcher_base
+    title: "P3 · Minimal"
+  - name: ai_researcher_no_review
+    title: "P4 · Minimal, no reviewer cue"
+  - name: ai_researcher_comparative
+    title: 'P5 · Minimal, "more novel" framing'
   - name: retrieval
     title: "Retrieval"
   - name: low_judge_reasoning

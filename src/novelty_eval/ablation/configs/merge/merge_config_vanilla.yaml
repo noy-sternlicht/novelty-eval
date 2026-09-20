@@ -43,6 +43,14 @@ dirs:
   - output/ablation_sweeps/derived_mec_k1_uni
 #  -  output/ablation_sweeps/derived_mec_k1_uni_3_samples
 
+  # AI-Researcher prompts (pairwise)
+  - output/ablation_sweeps/20260903_145322
+  - output/ablation_sweeps/20260905_gpt54_retry
+
+tracks:
+  - pairwise-vanilla-ai
+  - pointwise-vanilla-ai
+
 
 output_dir: output/ablation_sweeps/merge_vanilla_all_metrics  # optional
 report_name: all_ablations.md                 # optional
@@ -95,9 +103,15 @@ metrics:
 #     - low_judge_reasoning
 unified_chart:
   - name: vague_criterion
-    title: "Novelty Criterion"
+    title: "P1 · unguarded novelty criteria"
   - name: no_criteria_prompt
-    title: "No Criterion Prompt"
+    title: "P2 · No novelty criteria"
+  - name: ai_researcher_base
+    title: "P3 · Minimal"
+  - name: ai_researcher_no_review
+    title: "P4 · Minimal, no reviewer cue"
+  - name: ai_researcher_comparative
+    title: 'P5 · Minimal, "more novel" framing'
   - name: retrieval
     title: "Retrieval"
   - name: low_judge_reasoning
