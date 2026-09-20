@@ -8,13 +8,13 @@ configuration, one column per judge, column blocks per track.
 Reads the CSV that chart_tie_rates.py writes beside its figure, so the table and
 the figure can never drift apart — regenerate the figure and rerun this.
 
-    python table_tie_rates.py output/paper_figures/tie_rates_filtered.csv \
+    python table_tie_rates.py output/figures/tie-rates/tie_rates_filtered.csv \
         --tracks "Human-only" "Human + generated" \
         --track-title "Human-only=Human-Only" \
         --track-title "Human + generated=Human+Generated" \
         --models claude-sonnet-4-5 claude-opus-4-5 claude-opus-4-6 \
                  gpt-5.1 gpt-5.2 gpt-5.4 \
-        --out output/paper_figures/tie_rates_filtered.tex
+        --out output/figures/tie-rates/tie_rates_filtered.tex
 
 Ordering, all overridable:
 

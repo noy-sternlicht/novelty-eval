@@ -13,7 +13,7 @@ the numbers are the same ones the merged reports print.
     python chart_tie_rates.py \
         --track "Human + generated"=src/novelty_eval/ablation/configs/merge/merge_config_vanilla.yaml \
         --track "Human-only"=src/novelty_eval/ablation/configs/merge/merge_config_hvh.yaml \
-        --out output/paper_figures/tie_rates.pdf --formats pdf png
+        --out output/figures/tie-rates/tie_rates.pdf --formats pdf png
 
 A --track value is either a merge config (its `dirs:` list is used) or a sweep
 directory, and several may be comma-separated. Prefer the config: the merged
