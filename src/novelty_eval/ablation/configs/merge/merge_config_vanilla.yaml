@@ -116,10 +116,8 @@ unified_chart:
     title: "Retrieval"
   - name: low_judge_reasoning
     title: "Reasoning Effort = Low"
-  - name: unidirectional
-    title: "A=B*3,B=A*3 -> A=B*1"
   - name: mec_k_1
-    title: "A=B*3,B=A*3 -> A=B*1,B=A*1"
+    title: "One sample per direction"
   - name: convert_to_plan_form_pairwise_vanilla
     title: "Idea Format"
   - name: convert_to_plan_form_pointwise_vanilla

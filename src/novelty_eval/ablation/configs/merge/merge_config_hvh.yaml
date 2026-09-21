@@ -2,6 +2,16 @@ dirs:
   - output/ablation_sweeps/20260430_094157 # baseline
   - output/ablation_sweeps/20260430_094402
   - output/ablation_sweeps/20260430_094306
+
+  # The two sweeps above kept no batch_output_*.jsonl for their three Claude
+  # judges, so those cells could not be re-aggregated into the mec_k=1 study.
+  # These reruns fill exactly the five missing (ablation, judge) pairs, on the
+  # same instance set. retrieval_index is keyed (mode, ablation, model) and the
+  # last dir listed wins, so they must stay *below* the two sweeps they replace:
+  # the five cells come from here, every other cell in those rows is untouched.
+  - output/ablation_sweeps/refill_hvh_vague_criterion      # sonnet-4-5, opus-4-5, opus-4-6
+  - output/ablation_sweeps/refill_hvh_low_judge_reasoning  # opus-4-5, opus-4-6
+
   - output/ablation_sweeps/20260609_163911 # Idea format
   - output/ablation_sweeps/20260623_103738 # Retrieval
 
@@ -93,10 +103,8 @@ unified_chart:
     title: "Retrieval"
   - name: low_judge_reasoning
     title: "Reasoning Effort = Low"
-  - name: unidirectional
-    title: "A=B*3,B=A*3 -> A=B*1"
   - name: mec_k_1
-    title: "A=B*3,B=A*3 -> A=B*1,B=A*1"
+    title: "One sample per direction"
   - name: convert_to_plan_form_pairwise_human
     title: "Idea Format"
   - name: convert_to_plan_form_pointwise_human

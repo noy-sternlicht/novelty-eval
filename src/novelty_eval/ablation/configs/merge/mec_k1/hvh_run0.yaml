@@ -20,6 +20,11 @@ dirs:
   - output/ablation_sweeps/20260430_094157        # pairwise-hvh_current  (k=3)
   - output/ablation_sweeps/20260519_114951        # pointwise-hvh_current (k=3)
   - output/ablation_sweeps/derived_mec_k1_run0_hvh
+  # The five cells the 2026-04-30 sweeps could not supply, derived from the
+  # reruns that replaced them in merge_config_hvh.yaml — so both depths read the
+  # same calls there too. Distinct (ablation, judge) keys from the dir above, so
+  # nothing is overridden; it only fills what was blank.
+  - output/ablation_sweeps/derived_mec_k1_run0_hvh_refill
 
 output_dir: output/ablation_sweeps/merge_hvh_mec_k1_vs_k3
 
