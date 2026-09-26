@@ -1,12 +1,10 @@
-# Papers that consistently trigger safety/content-filter errors in LLM judges.
-# Adding a title here prevents the paper from appearing in newly generated test
-# instances (filtered in save_clean_novelty_dataset) AND automatically excludes
-# it from evaluation metrics at merge time (merge_ablation_runs.py reads this
-# file to derive exclude indices directly from test instance YAML files).
-#
+
 # Titles are matched case-insensitively.
 blocked_titles:
+  # Consistently triggers safety/content-filter errors in LLM judges.
   - "GeneBreaker: Jailbreak Attacks against DNA Language Models with Pathogenicity Guidance"
+
+  # The papers of the "other topics in machine learning" area
   - "On the Reasoning Abilities of Masked Diffusion Language Models"
   - "Ransomware Detection on Android: Performance and Energy"
   - "Fairness-Aware Multi-view Evidential Learning with Adaptive Prior"

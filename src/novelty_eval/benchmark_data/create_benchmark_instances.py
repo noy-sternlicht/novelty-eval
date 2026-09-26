@@ -49,6 +49,10 @@ except ImportError:
 # Initialize logger
 LOGGER = setup_logger(output_dir='..', console_level='INFO')
 
+# Primary areas left out of the benchmark: the catch-all area has no shared topic, so
+# its papers make no meaningful same-area pairs. Matched case-insensitively.
+EXCLUDED_AREAS = {"other topics in machine learning (i.e., none of the above)"}
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Abstract manipulation debug logging
@@ -1528,6 +1532,10 @@ def _load_and_filter_datasets(args):
                 LOGGER.info(f"Area '{area}' {key}: {before} -> {len(clean_data[area][key])} after {label}")
 
     for clean_data in clean_data_list:
+        for area in [a for a in clean_data if a.lower() in EXCLUDED_AREAS]:
+            LOGGER.info(f"Dropping excluded area '{area}'")
+            del clean_data[area]
+
         apply_to_area(clean_data, 'top_papers',
                       lambda ps: filter_papers_by_decision(ps, 'Accepted'), "decision filtering")
         apply_to_area(clean_data, 'bottom_papers',
