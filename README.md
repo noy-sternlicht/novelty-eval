@@ -21,6 +21,7 @@ TODO: short abstract-style paragraph.
   - [Novelty Evaluation Data](#novelty-evaluation-data)
     - [🤗 Hugging Face](#-hugging-face)
     - [Automatic Data Collection](#automatic-data-collection)
+    - [Expert Annotation of Judge Errors](#expert-annotation-of-judge-errors)
   - [Judge Evaluation](#judge-evaluation)
   - [Reproducing the Paper's Experiments](#reproducing-the-papers-experiments)
   - [Citation](#citation)
@@ -114,6 +115,10 @@ ds = load_dataset("noystl/novelty-judge-bench", "human-plus-generated_pointwise"
 The same pipeline that produced these files can be re-run on a newer conference cycle. See instructions here:
 
 [**Rebuilding the benchmark**](src/novelty_eval/benchmark_data/README.md)
+
+### Expert Annotation of Judge Errors
+
+[`data/expert-annotations/judge_errors.csv`](data/expert-annotations/judge_errors.csv) holds 30 pairwise instances re-judged blind by a domain expert: 28 the LLM judge got wrong and 2 controls it got right. The expert sided with the benchmark's gold label on all 30, and explains each choice in `annotation_reasoning`. See [data/README.md](data/README.md#expert-annotations) for further information.
 
 ## Judge Evaluation
 
