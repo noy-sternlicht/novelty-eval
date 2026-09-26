@@ -58,7 +58,12 @@ def chart_data_path(merge_dir, setup: str, variant: str = "filtered") -> Path:
     base = merge_dir / "unified_charts" if (merge_dir / "unified_charts").is_dir() \
         else merge_dir
     suffix = "" if variant == "unfiltered" else f"_{variant}"
-    return base / f"unified_{setup}{suffix}.json"
+    path = base / f"unified_{setup}{suffix}.json"
+    # The merge writes a _filtered file only when the blocklist removed something.
+    # On the released data/ (already filtered) it never does, so unfiltered is filtered.
+    if variant == "filtered" and not path.exists():
+        path = base / f"unified_{setup}.json"
+    return path
 
 
 def row_key(name: str, suffixes: tuple[str, ...] = TRACK_SUFFIXES) -> str:
