@@ -23,3 +23,6 @@ src/novelty_eval/benchmark_data/iclr_test_instances
 src/novelty_eval/benchmark_data/dirs_config.yaml
 src/novelty_eval/config/accuracy_sweep_config.yaml
 src/novelty_eval/ablation/configs/merge/merge_config.yaml
+
+# Private tooling
+src/novelty_eval/judge_error_annotation/export_expert_annotations.py
