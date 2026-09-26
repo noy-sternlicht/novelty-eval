@@ -38,12 +38,12 @@ Code: TODO-REPO-URL
 
 ## Setups
 
-Both setups share their **high-novelty pool `D_h`** (154 top-decile accepted ICLR 2026
+Both setups share their **high-novelty pool `D_+`** (154 top-decile accepted ICLR 2026
 submissions for which a majority of reviewers explicitly praised the novelty of the
-contribution and none disputed it) and differ in where the **low-novelty pool `D_l`** comes
+contribution and none disputed it) and differ in where the **low-novelty pool `D_-`** comes
 from:
 
-| Setup | `D_h` | `D_l` |
+| Setup | `D_+` | `D_-` |
 |---|---|---|
 | `human-only` | 154 ICLR submissions | 145 ICLR submissions whose reviewers faulted the originality |
 | `human-plus-generated` | the same 154 | 154 ideas from a plain LLM ideator (no scaffold, no tools, no literature access) |
@@ -54,7 +54,7 @@ from:
 Each setup is instantiated in two evaluation formats:
 
 * **pointwise** — one idea per row, binary label: is this idea novel?
-* **pairwise** — one `D_h` idea against one `D_l` idea; which of the two is more novel?
+* **pairwise** — one `D_+` idea against one `D_-` idea; which of the two is more novel?
 
 and in two idea formats:
 
@@ -62,7 +62,7 @@ and in two idea formats:
 * **plan** (`*_plan` configs) — the same ideas normalized into a two-field
   *purpose* / *mechanism* research plan.
 
-The `*_backbone-*` configs regenerate `D_l` with a different ideation backbone and are used
+The `*_backbone-*` configs regenerate `D_-` with a different ideation backbone and are used
 in the negatives-source experiment.
 
 ## Loading

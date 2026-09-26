@@ -20,10 +20,10 @@
 # ---------------------------------------------------------------------------
 
 # One of the released files in data/. Three choices are encoded in the path:
-#   setup       human-only/ (D_l is human-authored) | human-plus-generated/ (D_l is LLM-generated)
+#   setup       human-only/ (D_- is human-authored) | human-plus-generated/ (D_- is LLM-generated)
 #   format      pairwise (which of two ideas is more novel) | pointwise (is this idea novel?)
 #   idea format <name>.yaml (free-form abstract) | <name>_plan.yaml (purpose / mechanism plan)
-# data/human-plus-generated/backbone-*/ swaps the model that generated D_l.
+# data/human-plus-generated/backbone-*/ swaps the model that generated D_-.
 test_inputs: "data/human-only/pairwise.yaml"
 
 # Must match the file above: pairwise instances carry `expected_winners`,

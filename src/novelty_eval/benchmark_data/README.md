@@ -39,19 +39,19 @@ iclr_data:
   - "…/iclr_2026_clean_novelty_dataset_10_percent.json"
 output_dir: "output/benchmark_instances/example"
 
-# pairwise (one D_h idea against one D_l idea) or pointwise (one labeled idea)
+# pairwise (one D_+ idea against one D_- idea) or pointwise (one labeled idea)
 pointwise: false
 num_top_papers: 1
 num_bottom_papers: 1
 
 # which papers qualify: reviewer agreement, then score thresholds
 strictness: majority          # null | majority | all
-min_pos_rating: 6.0           # D_h
+min_pos_rating: 6.0           # D_+
 min_pos_contribution: 3.0
-max_neg_rating: 3.5           # D_l
+max_neg_rating: 3.5           # D_-
 max_neg_contribution: 2.0
 
-# where D_l comes from: false → low-rated papers, true → generated ideas
+# where D_- comes from: false → low-rated papers, true → generated ideas
 llm_negatives: false
 llm_negatives_model: "claude-sonnet-4-5"
 llm_negatives_prompt: "…/templates/idea_generation.jinja2"

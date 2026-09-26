@@ -12,7 +12,7 @@ iclr_data:
 output_dir: "output/benchmark_instances/example"
 
 # ── Instance format ───────────────────────────────────────────────────────────
-# false → pairwise: num_top_papers ideas from D_h against num_bottom_papers from D_l.
+# false → pairwise: num_top_papers ideas from D_+ against num_bottom_papers from D_-.
 # true  → pointwise: one idea per instance with a POSITIVE / NEGATIVE label.
 pointwise: false
 num_top_papers: 1
@@ -23,14 +23,14 @@ num_bottom_papers: 1
 strictness: majority
 
 # Score thresholds separating the two pools. null disables a filter.
-min_pos_rating: 6.0          # D_h: well-rated papers
+min_pos_rating: 6.0          # D_+: well-rated papers
 min_pos_contribution: 3.0
-max_neg_rating: 3.5          # D_l: poorly rated papers
+max_neg_rating: 3.5          # D_-: poorly rated papers
 max_neg_contribution: 2.0
 
 # ── Where the low-novelty pool comes from ─────────────────────────────────────
-# false → D_l is drawn from low-rated ICLR papers (the Human-Only setup).
-# true  → D_l is generated per research area by an LLM ideator (Human+Generated).
+# false → D_- is drawn from low-rated ICLR papers (the Human-Only setup).
+# true  → D_- is generated per research area by an LLM ideator (Human+Generated).
 llm_negatives: false
 llm_negatives_model: "claude-sonnet-4-5"
 llm_negatives_prompt: "src/novelty_eval/benchmark_data/templates/idea_generation.jinja2"
