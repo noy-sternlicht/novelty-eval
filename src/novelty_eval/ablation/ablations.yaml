@@ -226,8 +226,6 @@ ablations:
     tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan]
     sweep:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_variation.jinja2"
-      mec_k: 1
-      bidirectional: true
 
   ai_researcher_conference_mention:
     description: "AI-researcher judge prompt (novelty framing, no conference mention)"
