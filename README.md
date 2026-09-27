@@ -20,16 +20,13 @@ TODO: short abstract-style paragraph.
     - [Setting up API keys](#setting-up-api-keys)
   - [Novelty Evaluation Data](#novelty-evaluation-data)
     - [🤗 Hugging Face](#-hugging-face)
-    - [Automatic Data Collection](#automatic-data-collection)
     - [Expert Annotation of Judge Errors](#expert-annotation-of-judge-errors)
+    - [Automatic Data Collection](#automatic-data-collection)
   - [Judge Evaluation](#judge-evaluation)
   - [Reproducing the Paper's Experiments](#reproducing-the-papers-experiments)
     - [Controlled study](#controlled-study)
     - [Retrieval's limitations](#retrievals-limitations)
     - [Dedicated novelty judges](#dedicated-novelty-judges)
-    - [Expert validation](#expert-validation)
-  - [Citation](#citation)
-  - [Authors](#authors)
 <!-- TOC -->
 
 ## Getting started
@@ -80,7 +77,7 @@ export OPENREVIEW_PASSWORD="your-openreview-password"
 
 ## Novelty Evaluation Data
 
-Our benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups consist of two separate idea "pools":  **high-novelty pool `D_+`** and **low-novelty pool `D_-`** where ideas from `D_+` can be assumed to be more novel than ones in `D_-`.
+Our benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups consist of two separate idea "pools":  **high-novelty pool `D_+`** and **lower-novelty pool `D_-`** where ideas from `D_+` can be assumed to be more novel than ones in `D_-`.
 
 | Setup | `D_+` (novel) | `D_-` (lower-novelty) |
 |---|---|---|
@@ -90,7 +87,7 @@ Our benchmark consists of two data setups: **Human-Only** and **Human+Generated*
 Where: 
 * **validated-novel** (both setups) - ICLR 2026 submissions whose reviewers explicitly praised the originality of the contribution itself and none disputed it, accepted, in the top rating decile of their primary area, average contribution score >= 3.0.
 * **validated-lower-novelty** (Human-Only) - the mirror image: reviewers faulted the originality and none praised it, rejected, in the bottom rating decile of their primary area, average contribution score <= 2.0.
-* **weakly-labeled-lower-novelty** (Human+Generated) - ideas from Claude Sonnet 4.5, prompted simply to propose a novel idea with no scaffold, literature access, or tools. These carry no review-based label; they are *assumed* to fall below the human high-novelty bar.
+* **weakly-labeled-lower-novelty** (Human+Generated) - ideas from Claude Sonnet 4.5, prompted simply to propose a novel idea with no scaffold, literature access, or tools.
 
 Each setup is instantiated in two evaluation formats:
 
@@ -106,7 +103,7 @@ and in two idea formats:
 
 ### 🤗 Hugging Face
 
-The same instances are released on the Hub as [noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench)
+Code in this repo is designed to work with the yaml files in `data`, but we also release the same instances on the Hub: [noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench)
 
 ```python
 from datasets import load_dataset
@@ -114,15 +111,16 @@ from datasets import load_dataset
 ds = load_dataset("noystl/novelty-judge-bench", "human-plus-generated_pointwise", split="test")
 ```
 
+### Expert Annotation of Judge Errors
+
+[`data/expert-annotations/judge_errors.csv`](data/expert-annotations/judge_errors.csv) holds 30 pairwise instances re-judged blind by a domain expert: 28 the LLM judge got wrong and 2 controls it got right. The expert sided with the benchmark's gold label on all 30, and explains each choice in `annotation_reasoning`. See [data/README.md](data/README.md#expert-annotations) for further information.
+
 ### Automatic Data Collection
 
 The same pipeline that produced these files can be re-run on a newer conference cycle. See instructions here:
 
 [**Rebuilding the benchmark**](src/novelty_eval/benchmark_data/README.md)
 
-### Expert Annotation of Judge Errors
-
-[`data/expert-annotations/judge_errors.csv`](data/expert-annotations/judge_errors.csv) holds 30 pairwise instances re-judged blind by a domain expert: 28 the LLM judge got wrong and 2 controls it got right. The expert sided with the benchmark's gold label on all 30, and explains each choice in `annotation_reasoning`. See [data/README.md](data/README.md#expert-annotations) for further information.
 
 ## Judge Evaluation
 
@@ -133,19 +131,11 @@ python src/novelty_eval/run_benchmark.py \
     --config src/novelty_eval/config/example_eval.yaml
 ```
 
-Comparing several judges, or the same judge under a controlled change, is a *sweep*: [example_sweep.yaml](src/novelty_eval/config/example_sweep.yaml) sets a shared `base_config` and one entry per run. Each entry becomes its own judge run, and the results are collected into a cross-config `sweep_comparison_report.md`.
-
-```bash
-python src/novelty_eval/run_benchmark_sweep.py \
-    --config src/novelty_eval/config/example_sweep.yaml \
-    --parallel --skip-on-error
-```
-
 ## Reproducing the Paper's Experiments
 
 Every experiment takes three steps:
 
-1. **Run** the controlled-changes: `./scripts/eval/run_ablations.sh --skip-create --ablations <key>,<key>,...`. The keys are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml). `--skip-create` runs on the released instances in [data/](data/).
+1. **Run** the controlled-changes: `./scripts/eval/run_ablations.sh --skip-create --ablations <key>,<key>,...`. The keys are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml). 
 2. **Merge** results for different controlled changes + compute statistical significance: `python src/novelty_eval/ablation/merge_ablation_runs.py --config <merge config>`. The configs in [configs/merge/](src/novelty_eval/ablation/configs/merge/) list *our* run directories under `dirs:`, so replace them with yours.
 3. **Plot** with the notebook listed below.
 
@@ -175,10 +165,10 @@ Merge with [merge_config_hvh.yaml](src/novelty_eval/ablation/configs/merge/merge
 | Figure / table | Notebook |
 |---|---|
 | Teaser (Fig. 1) | [motivation_figure.ipynb](src/novelty_eval/figures/motivation_figure.ipynb) |
-| Ablation results, plus the soft-accuracy and per-class F1 versions in the appendix | [two_track_figure.ipynb](src/novelty_eval/figures/two_track_figure.ipynb) |
+| Controlled changes results, plus the soft-accuracy and per-class F1 versions in the appendix | [two_track_figure.ipynb](src/novelty_eval/figures/two_track_figure.ipynb) |
 | Tie rates (figure and table) | [tie_rates_figure.ipynb](src/novelty_eval/figures/tie_rates_figure.ipynb) |
 | Effect of the lower-novelty ideas source | [negatives_source_figure.ipynb](src/novelty_eval/figures/negatives_source_figure.ipynb) |
-| Ablation results without verdict aggregation ³ | [sampling_depth_figure.ipynb](src/novelty_eval/figures/sampling_depth_figure.ipynb) |
+| Controlled changes results without verdict aggregation ³ | [sampling_depth_figure.ipynb](src/novelty_eval/figures/sampling_depth_figure.ipynb) |
 
 ³ Derive the single-sample version of every ablation with `derive_subrun_artifacts.py`, then merge with [configs/merge/mec_k1/](src/novelty_eval/ablation/configs/merge/mec_k1/).
 
@@ -198,20 +188,5 @@ python src/novelty_eval/run_benchmark.py --config src/novelty_eval/config/accura
 
 [cost_efficiency.ipynb](src/novelty_eval/figures/cost_efficiency.ipynb) draws the cost vs. macro-F1 figures and the pointwise results table. Point it at your run directories first.
 
-### Expert validation
-
-The annotations are in [judge_errors.csv](data/expert-annotations/judge_errors.csv). [grade_annotations.ipynb](src/novelty_eval/judge_error_annotation/grade_annotations.ipynb) scores them, and [judge_error_examples.ipynb](src/novelty_eval/figures/judge_error_examples.ipynb) builds the examples table.
-
 A file-by-file map of the codebase lives in [src/novelty_eval/README.md](src/novelty_eval/README.md).
 
-## Citation
-
-If you use this code or data in your research, please cite our paper:
-
-```bibtex
-TODO
-```
-
-## Authors
-
-* TODO
