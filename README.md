@@ -8,8 +8,12 @@
 TODO: short abstract-style paragraph.
 
 <p align="center">
-  <img src="TODO-overview.png" alt="Overview" />
+  <img src="assets/prompt_sensitivity.gif" alt="Rewording the judge prompt changes GPT-5.4's accuracy" width="100%" />
 </p>
+
+<!-- <p align="center">
+  <img src="assets/overview.png" alt="Overview" width="100%" />
+</p> -->
 
 ## Table of Contents
 
