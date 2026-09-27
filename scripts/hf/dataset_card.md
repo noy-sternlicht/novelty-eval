@@ -23,16 +23,11 @@ configs:
 {{CONFIGS_YAML}}
 ---
 
-# Novelty Judge Bench
+# TODO-TITLE
 
-Benchmark instances for **_Automatic Novelty Judges Are Brittle, Especially on AI-Generated
-Ideas_** (paper link: TODO).
+Benchmark instances for **TODO-TITLE** (paper link: TODO).
 
-Automated ideation systems are judged on the novelty of the ideas they produce, so a reliable
-automatic novelty judge is a bottleneck in their development — yet these judges are rarely
-validated, and what validation exists uses human-authored papers rather than the
-machine-generated ideas the judges are actually deployed on. This benchmark is built
-automatically from peer review and covers both regimes.
+TODO-DESC
 
 Code: TODO-REPO-URL
 
