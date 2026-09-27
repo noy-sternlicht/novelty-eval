@@ -135,7 +135,7 @@ python src/novelty_eval/run_benchmark.py \
 
 Every experiment takes three steps:
 
-1. **Run** the controlled-changes: `./scripts/eval/run_ablations.sh --skip-create --ablations <key>,<key>,...`. The keys are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml). 
+1. **Run** the controlled-changes: `./scripts/eval/run_ablations.sh --skip-create --models <key>,<key>,... --parallel-models --tracks <key>,<key>,... --ablations <key>,<key>,... `. Controlled changes (ablations) are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml).  Adding `--batch` runs experiments in api-batch mode (half the price).
 2. **Merge** results for different controlled changes + compute statistical significance: `python src/novelty_eval/ablation/merge_ablation_runs.py --config <merge config>`. The configs in [configs/merge/](src/novelty_eval/ablation/configs/merge/) list *our* run directories under `dirs:`, so replace them with yours.
 3. **Plot** with the notebook listed below.
 
