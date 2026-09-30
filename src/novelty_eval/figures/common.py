@@ -266,7 +266,7 @@ class TwoTrackFigure:
     row_groups: Sequence[tuple] = ()  # (group label, panel names in it)
     baseline_label: str = "baseline"  # the un-ablated strip, named like a row
     col_axis_label: str = "Judge model"
-    sig_note: str = "* significant at 95% (bootstrap)"
+    sig_note: str = "* p < 0.05 (two-sided paired bootstrap)"
                                       # the key to the marked cells, set in the
                                       # bottom margin beside the column title.
                                       # Delta reading only — the absolute one
@@ -602,13 +602,15 @@ class TwoTrackFigure:
 
         # The key to the asterisk, on the column title's own baseline: that row
         # of the bottom margin is empty either side of a centred title, so the
-        # key costs the figure no height at all. Set light and small, since a
-        # footnote that outweighs the axis title is a footnote in the wrong
-        # place. Only the delta reading marks anything to key.
+        # key costs the figure no height at all. It goes in the bottom-left
+        # corner, under the row names, where a legend is looked for and where
+        # nothing competes with it, and is set as dark as the axis titles and
+        # as large as the cell numbers it explains, so it is read rather than
+        # skipped. Only the delta reading marks anything to key.
         if not absolute and self.sig_note:
-            fig.text(1 - MARGIN_IN["right"] / width, XLABEL_IN / fig_h,
-                     self.sig_note, ha="right", va="baseline", fontsize=5.8,
-                     color="#777777")
+            fig.text(EDGE_IN / width, XLABEL_IN / fig_h,
+                     self.sig_note, ha="left", va="baseline", fontsize=6.4,
+                     color="#333333")
 
         prefix = self.file_prefix or self.figure
         stem = f"{prefix}_{setup}_{self.variant}_{self.metrics[setup]}"
