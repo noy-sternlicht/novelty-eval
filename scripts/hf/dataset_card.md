@@ -29,6 +29,10 @@ configs:
 [![Code](https://img.shields.io/badge/Code-GitHub-black?style=flat-square&logo=github)](https://github.com/noy-sternlicht/novelty-eval)
 [![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](https://noy-sternlicht.github.io/Novelty-Evaluation-Web/)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/noy-sternlicht/novelty-eval/main/assets/prompt_sensitivity.gif" alt="Rewording the judge prompt changes GPT-5.4's accuracy" width="100%" />
+</p>
+
 Benchmark instances for the paper
 [**Old Ideas, Novel Problems: The Instability of LLM-Based Novelty Evaluation**](https://arxiv.org/abs/2610.02022).
 Code for running judges on this benchmark and reproducing the paper's experiments is at
@@ -39,6 +43,10 @@ Automated ideation systems are often evaluated on the novelty of the ideas they 
 Not well. We present a systematic controlled study of novelty evaluation design choices. We first build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
 
 ## Setups
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/noy-sternlicht/novelty-eval/main/assets/data-creation-overview.png" alt="Novelty evaluation data creation pipeline" width="100%" />
+</p>
 
 The benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups
 consist of two separate idea "pools": a **high-novelty pool `D_+`** and a **lower-novelty pool
@@ -71,6 +79,19 @@ and in two idea formats:
 The `*_backbone-*` configs regenerate `D_-` with a different ideation backbone and are used
 in the negatives-source experiment.
 
+## Configs at a glance
+
+| Config | Rows | Contents |
+|---|---|---|
+| `human-only_pointwise`, `human-only_pointwise_plan` | 299 | 154 novel, 145 lower-novelty |
+| `human-only_pairwise`, `human-only_pairwise_plan` | 154 | Novel idea is `idea_a` in 84 pairs, `idea_b` in 70 |
+| `human-plus-generated_pointwise` (default), `human-plus-generated_pointwise_plan` | 308 | 154 novel, 154 lower-novelty |
+| `human-plus-generated_pairwise`, `human-plus-generated_pairwise_plan` | 154 | Novel idea is `idea_a` in 80 pairs, `idea_b` in 74 |
+| `human-plus-generated_pointwise_backbone-{gpt-5.1,gpt-5.4,opus-4-5}` | 308 each | As above, with `D_-` from GPT-5.1, GPT-5.4, or Claude Opus 4.5 |
+| `human-plus-generated_pairwise_backbone-{gpt-5.1,gpt-5.4,opus-4-5}` | 154 each | As above, with `D_-` from GPT-5.1, GPT-5.4, or Claude Opus 4.5 |
+
+All configs have a single `test` split.
+
 ## Loading
 
 ```python
@@ -80,25 +101,24 @@ ds = load_dataset("noystl/novelty-judge-bench", "human-plus-generated_pointwise"
 print(ds[0]["idea"], ds[0]["label"])
 ```
 
-
 ## Fields
 
-### pointwise configs
+### Pointwise configs
 
-| Field | Type | Description                                                      |
-|---|---|------------------------------------------------------------------|
-| `id` | int32 | Instance id, unique within the config                            |
-| `iclr_area` | string | The idea's corresponding ICLR primary area                       |
-| `idea` | string | The idea to judge (abstract or plan form, per config)            |
+| Field | Type | Description |
+|---|---|---|
+| `id` | int32 | Instance id, unique within the config |
+| `iclr_area` | string | The idea's ICLR primary area |
+| `idea` | string | The idea to judge (abstract or plan form, depending on the config) |
 | `label` | string | `POSITIVE` (`D_+`, novel) or `NEGATIVE` (`D_-`, lower-novelty) — the ground truth |
 | `idea_source` | string | `human` (an ICLR submission) or `generated` (LLM ideator output) |
-| `title` | string | Submission title, or a synthetic identifier for generated ideas  |
-| `rating` | float64 | Mean reviewer rating; `null` for generated ideas                 |
-| `contribution` | float64 | Mean reviewer contribution score; `null` for generated ideas     |
-| `positive_signals` | list[string] | Reviewer excerpts praising originality                           |
-| `negative_signals` | list[string] | Reviewer excerpts faulting originality                           |
+| `title` | string | Submission title, or a synthetic identifier for generated ideas |
+| `rating` | float64 | Mean reviewer rating; `null` for generated ideas |
+| `contribution` | float64 | Mean reviewer contribution score; `null` for generated ideas |
+| `positive_signals` | list[string] | Reviewer excerpts praising originality |
+| `negative_signals` | list[string] | Reviewer excerpts faulting originality |
 
-### pairwise configs
+### Pairwise configs
 
 | Field | Type | Description |
 |---|---|---|
@@ -114,8 +134,8 @@ print(ds[0]["idea"], ds[0]["label"])
 | `positive_signals_a/_b` | list[string] | Per-side reviewer excerpts praising originality |
 | `negative_signals_a/_b` | list[string] | Per-side reviewer excerpts faulting originality |
 
-Idea order within a pair is shuffled, so a judge cannot do well by always picking a position.
-
+Idea order within each pair is randomized, so always picking the same position scores close
+to chance (see the A/B split in [Configs at a glance](#configs-at-a-glance)).
 
 ## Authors
 
