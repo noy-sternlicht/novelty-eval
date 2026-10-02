@@ -1,15 +1,20 @@
-# TODO: Paper Title
+# Old Ideas, Novel Problems:<br> The Instability of LLM-Based Novelty Evaluation
 
-[![Arxiv](https://img.shields.io/badge/Arxiv-TODO-red?style=flat-square&logo=arxiv&logoColor=white)](TODO)
+[![Arxiv](https://img.shields.io/badge/Arxiv-2610.02022-red?style=flat-square&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2610.02022)
 [![Python Versions](https://img.shields.io/badge/Python-3.12-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](TODO)
 [![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Data-Here-yellow?style=flat-square)](https://huggingface.co/datasets/noystl/novelty-judge-bench)
 
-TODO: short abstract-style paragraph.
 
 <p align="center">
   <img src="assets/prompt_sensitivity.gif" alt="Rewording the judge prompt changes GPT-5.4's accuracy" width="100%" />
 </p>
+
+
+Automated ideation systems are often evaluated on the novelty of the ideas they produce, and that judgment is increasingly delegated to large language models. Such judges are typically built ad hoc and validated, if at all, on human-authored papers rather than on the generated ideas they are meant to score. So, how do novelty judges perform?
+
+Not well. We present a systematic controlled study of novelty evaluation design choices. We first build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
+
 
 <!-- <p align="center">
   <img src="assets/overview.png" alt="Overview" width="100%" />
@@ -18,7 +23,7 @@ TODO: short abstract-style paragraph.
 ## Table of Contents
 
 <!-- TOC -->
-- [TODO: Paper Title](#todo-paper-title)
+- [Old Ideas, Novel Problems: The Instability of LLM-Based Novelty Evaluation](#old-ideas-novel-problems-the-instability-of-llm-based-novelty-evaluation)
   - [Table of Contents](#table-of-contents)
   - [Getting started](#getting-started)
     - [Setting up API keys](#setting-up-api-keys)
@@ -31,6 +36,8 @@ TODO: short abstract-style paragraph.
     - [Controlled study](#controlled-study)
     - [Retrieval's limitations](#retrievals-limitations)
     - [Dedicated novelty judges](#dedicated-novelty-judges)
+  - [Authors](#authors)
+  - [Cite us!](#cite-us)
 <!-- TOC -->
 
 ## Getting started
@@ -80,6 +87,10 @@ export OPENREVIEW_PASSWORD="your-openreview-password"
 ```
 
 ## Novelty Evaluation Data
+
+<p align="center">
+  <img src="assets/data-creation-overview.png" alt="Novelty evaluation data creation pipeline" width="100%" />
+</p>
 
 Our benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups consist of two separate idea "pools":  **high-novelty pool `D_+`** and **lower-novelty pool `D_-`** where ideas from `D_+` can be assumed to be more novel than ones in `D_-`.
 
@@ -137,6 +148,10 @@ python src/novelty_eval/run_benchmark.py \
 
 ## Reproducing the Paper's Experiments
 
+<p align="center">
+  <img src="assets/controlled-study-overview.png" alt="Controlled study overview" width="100%" />
+</p>
+
 Every experiment takes three steps:
 
 1. **Run** the controlled-changes: `./scripts/eval/run_ablations.sh --skip-create --models <key>,<key>,... --parallel-models --tracks <key>,<key>,... --ablations <key>,<key>,... `. Controlled changes (ablations) are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml).  Adding `--batch` runs experiments in api-batch mode (half the price).
@@ -193,4 +208,27 @@ python src/novelty_eval/run_benchmark.py --config src/novelty_eval/config/accura
 [cost_efficiency.ipynb](src/novelty_eval/figures/cost_efficiency.ipynb) draws the cost vs. macro-F1 figures and the pointwise results table. Point it at your run directories first.
 
 A file-by-file map of the codebase lives in [src/novelty_eval/README.md](src/novelty_eval/README.md).
+
+## Authors
+
+- [Noy Sternlicht](https://noy-sternlicht.github.io/) — Hebrew University of Jerusalem, Allen Institute for AI
+- [Simra Shahid](https://sites.google.com/view/simra-shahid/home) — Microsoft
+- [Peter Jansen](https://cognitiveai.org/) — Allen Institute for AI, University of Arizona
+- [Daniel S. Weld](https://www.cs.washington.edu/people/faculty/weld/) — Allen Institute for AI, University of Washington
+- [Pao Siangliulue](https://paoponder.com/) — Allen Institute for AI
+- [Tom Hope](https://tomhoper.github.io/) — Hebrew University of Jerusalem, Allen Institute for AI
+
+## Cite us!
+
+```bibtex
+@misc{sternlicht2026oldideasnovelproblems,
+      title={Old Ideas, Novel Problems: The Instability of LLM-Based Novelty Evaluation}, 
+      author={Noy Sternlicht and Simra Shahid and Peter Jansen and Daniel S. Weld and Pao Siangliulue and Tom Hope},
+      year={2026},
+      eprint={2610.02022},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2610.02022}, 
+}
+```
 
