@@ -23,26 +23,37 @@ configs:
 {{CONFIGS_YAML}}
 ---
 
-# TODO-TITLE
+# Old Ideas, Novel Problems:<br> The Instability of LLM-Based Novelty Evaluation
 
-Benchmark instances for **TODO-TITLE** (paper link: TODO).
+[![Arxiv](https://img.shields.io/badge/Arxiv-2610.02022-red?style=flat-square&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2610.02022)
+[![Code](https://img.shields.io/badge/Code-GitHub-black?style=flat-square&logo=github)](https://github.com/noy-sternlicht/novelty-eval)
+[![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](https://noy-sternlicht.github.io/Novelty-Evaluation-Web/)
 
-TODO-DESC
+Benchmark instances for the paper
+[**Old Ideas, Novel Problems: The Instability of LLM-Based Novelty Evaluation**](https://arxiv.org/abs/2610.02022).
+Code for running judges on this benchmark and reproducing the paper's experiments is at
+[noy-sternlicht/novelty-eval](https://github.com/noy-sternlicht/novelty-eval).
 
-Code: TODO-REPO-URL
+Automated ideation systems are often evaluated on the novelty of the ideas they produce, and that judgment is increasingly delegated to large language models. Such judges are typically built ad hoc and validated, if at all, on human-authored papers rather than on the generated ideas they are meant to score. So, how do novelty judges perform?
+
+Not well. We present a systematic controlled study of novelty evaluation design choices. We first build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
 
 ## Setups
 
-Both setups share their **high-novelty pool `D_+`** (154 top-decile accepted ICLR 2026
-submissions for which a majority of reviewers explicitly praised the novelty of the
-contribution and none disputed it) and differ in where the **low-novelty pool `D_-`** comes
-from:
+The benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups
+consist of two separate idea "pools": a **high-novelty pool `D_+`** and a **lower-novelty pool
+`D_-`**, where ideas from `D_+` can be assumed to be more novel than those in `D_-`. The two
+setups share the same `D_+` and differ in where `D_-` comes from.
 
-| Setup | `D_+` | `D_-` |
+| Setup | `D_+` (novel) | `D_-` (lower-novelty) |
 |---|---|---|
-| `human-only` | 154 ICLR submissions | 145 ICLR submissions whose reviewers faulted the originality |
-| `human-plus-generated` | the same 154 | 154 ideas from a plain LLM ideator (no scaffold, no tools, no literature access) |
+| **Human-Only** (`human-only_*`) | 154 **validated-novel** | 145 **validated-lower-novelty** |
+| **Human+Generated** (`human-plus-generated_*`) | 154 **validated-novel** | 154 **weakly-labeled-lower-novelty** |
 
+Where:
+* **validated-novel** (both setups) — ICLR 2026 submissions where a majority of reviewers explicitly praised the originality of the contribution itself and none disputed it; accepted, in the top rating decile of their primary area, with an average contribution score >= 3.0.
+* **validated-lower-novelty** (Human-Only) — the mirror image: a majority of reviewers faulted the originality and none praised it; rejected, in the bottom rating decile of their primary area, with an average contribution score <= 2.0.
+* **weakly-labeled-lower-novelty** (Human+Generated) — ideas from Claude Sonnet 4.5, prompted simply to propose a novel idea with no scaffold, literature access, or tools.
 
 ## Formats
 
@@ -79,7 +90,7 @@ print(ds[0]["idea"], ds[0]["label"])
 | `id` | int32 | Instance id, unique within the config                            |
 | `iclr_area` | string | The idea's corresponding ICLR primary area                       |
 | `idea` | string | The idea to judge (abstract or plan form, per config)            |
-| `label` | string | `POSITIVE` (novel) or `NEGATIVE` (not novel) — the ground truth  |
+| `label` | string | `POSITIVE` (`D_+`, novel) or `NEGATIVE` (`D_-`, lower-novelty) — the ground truth |
 | `idea_source` | string | `human` (an ICLR submission) or `generated` (LLM ideator output) |
 | `title` | string | Submission title, or a synthetic identifier for generated ideas  |
 | `rating` | float64 | Mean reviewer rating; `null` for generated ideas                 |
@@ -106,12 +117,25 @@ print(ds[0]["idea"], ds[0]["label"])
 Idea order within a pair is shuffled, so a judge cannot do well by always picking a position.
 
 
-## Citation
+## Authors
+
+- [Noy Sternlicht](https://noy-sternlicht.github.io/) — Hebrew University of Jerusalem, Allen Institute for AI
+- [Simra Shahid](https://sites.google.com/view/simra-shahid/home) — Microsoft
+- [Peter Jansen](https://cognitiveai.org/) — Allen Institute for AI, University of Arizona
+- [Daniel S. Weld](https://www.cs.washington.edu/people/faculty/weld/) — Allen Institute for AI, University of Washington
+- [Pao Siangliulue](https://paoponder.com/) — Allen Institute for AI
+- [Tom Hope](https://tomhoper.github.io/) — Hebrew University of Jerusalem, Allen Institute for AI
+
+## Cite us!
 
 ```bibtex
-TODO: add BibTeX once the preprint is out.
-@misc{noveltyjudgebench,
-  title  = {Automatic Novelty Judges Are Brittle, Especially on AI-Generated Ideas},
-  year   = {2026}
+@misc{sternlicht2026oldideasnovelproblems,
+      title={Old Ideas, Novel Problems: The Instability of LLM-Based Novelty Evaluation}, 
+      author={Noy Sternlicht and Simra Shahid and Peter Jansen and Daniel S. Weld and Pao Siangliulue and Tom Hope},
+      year={2026},
+      eprint={2610.02022},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2610.02022}, 
 }
 ```
