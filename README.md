@@ -44,7 +44,8 @@ Not well. We present a systematic controlled study of novelty evaluation design 
 
 1. Clone this repository:
    ```bash
-   git clone TODO-REPO-URL
+   git clone https://github.com/noy-sternlicht/novelty-eval.git
+   cd novelty-eval
    ```
 2. Create and activate a virtual environment:
    ```bash
