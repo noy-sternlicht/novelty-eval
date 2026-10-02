@@ -92,17 +92,17 @@ export OPENREVIEW_PASSWORD="your-openreview-password"
   <img src="assets/data-creation-overview.png" alt="Novelty evaluation data creation pipeline" width="100%" />
 </p>
 
-Our benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups consist of two separate idea "pools":  **high-novelty pool `D_+`** and **lower-novelty pool `D_-`** where ideas from `D_+` can be assumed to be more novel than ones in `D_-`.
+Our benchmark consists of two data setups: **Human-Only** and **Human+Generated**. Both setups consist of two separate idea "pools": a **high-novelty pool `D_+`** and a **lower-novelty pool `D_-`**, where ideas from `D_+` can be assumed to be more novel than those in `D_-`.
 
 | Setup | `D_+` (novel) | `D_-` (lower-novelty) |
 |---|---|---|
 | **Human-Only** (`data/human-only/`) | 154 **validated-novel** | 145 **validated-lower-novelty** |
 | **Human+Generated** (`data/human-plus-generated/`) | 154 **validated-novel** | 154 **weakly-labeled-lower-novelty** |
 
-Where: 
-* **validated-novel** (both setups) - ICLR 2026 submissions whose reviewers explicitly praised the originality of the contribution itself and none disputed it, accepted, in the top rating decile of their primary area, average contribution score >= 3.0.
-* **validated-lower-novelty** (Human-Only) - the mirror image: reviewers faulted the originality and none praised it, rejected, in the bottom rating decile of their primary area, average contribution score <= 2.0.
-* **weakly-labeled-lower-novelty** (Human+Generated) - ideas from Claude Sonnet 4.5, prompted simply to propose a novel idea with no scaffold, literature access, or tools.
+Where:
+* **validated-novel** (both setups) — ICLR 2026 submissions whose reviewers explicitly praised the originality of the contribution itself and none disputed it; accepted, in the top rating decile of their primary area, with an average contribution score >= 3.0.
+* **validated-lower-novelty** (Human-Only) — the mirror image: reviewers faulted the originality and none praised it; rejected, in the bottom rating decile of their primary area, with an average contribution score <= 2.0.
+* **weakly-labeled-lower-novelty** (Human+Generated) — ideas from Claude Sonnet 4.5, prompted simply to propose a novel idea with no scaffold, literature access, or tools.
 
 Each setup is instantiated in two evaluation formats:
 
@@ -118,7 +118,7 @@ and in two idea formats:
 
 ### 🤗 Hugging Face
 
-Code in this repo is designed to work with the yaml files in `data`, but we also release the same instances on the Hub: [noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench)
+Code in this repo is designed to work with the YAML files in `data`, but we also release the same instances on the Hub: [noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench).
 
 ```python
 from datasets import load_dataset
@@ -139,7 +139,7 @@ The same pipeline that produced these files can be re-run on a newer conference 
 
 ## Judge Evaluation
 
-[example_eval.yaml](src/novelty_eval/config/example_eval.yaml) runs a single judge over a single released benchmark file, under the baseline configuration of the paper: a verdict plus reasoning, three samples per decision, high reasoning effort, no tools and no related work. 
+[example_eval.yaml](src/novelty_eval/config/example_eval.yaml) runs a single judge over a single released benchmark file, under the baseline configuration of the paper: a verdict plus reasoning, three samples per decision, high reasoning effort, no tools, and no related work.
 
 ```bash
 python src/novelty_eval/run_benchmark.py \
@@ -154,8 +154,8 @@ python src/novelty_eval/run_benchmark.py \
 
 Every experiment takes three steps:
 
-1. **Run** the controlled-changes: `./scripts/eval/run_ablations.sh --skip-create --models <key>,<key>,... --parallel-models --tracks <key>,<key>,... --ablations <key>,<key>,... `. Controlled changes (ablations) are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml).  Adding `--batch` runs experiments in api-batch mode (half the price).
-2. **Merge** results for different controlled changes + compute statistical significance: `python src/novelty_eval/ablation/merge_ablation_runs.py --config <merge config>`. The configs in [configs/merge/](src/novelty_eval/ablation/configs/merge/) list *our* run directories under `dirs:`, so replace them with yours.
+1. **Run** the controlled changes: `./scripts/eval/run_ablations.sh --skip-create --models <key>,<key>,... --parallel-models --tracks <key>,<key>,... --ablations <key>,<key>,...`. Controlled changes (ablations) are defined in [ablations.yaml](src/novelty_eval/ablation/ablations.yaml). Adding `--batch` runs experiments in API batch mode (half the price).
+2. **Merge** results for different controlled changes and compute statistical significance: `python src/novelty_eval/ablation/merge_ablation_runs.py --config <merge config>`. The configs in [configs/merge/](src/novelty_eval/ablation/configs/merge/) list *our* run directories under `dirs:`, so replace them with yours.
 3. **Plot** with the notebook listed below.
 
 In key and config names, `hvh` is **Human-Only** and `vanilla` is **Human+Generated**.
@@ -184,10 +184,10 @@ Merge with [merge_config_hvh.yaml](src/novelty_eval/ablation/configs/merge/merge
 | Figure / table | Notebook |
 |---|---|
 | Teaser (Fig. 1) | [motivation_figure.ipynb](src/novelty_eval/figures/motivation_figure.ipynb) |
-| Controlled changes results, plus the soft-accuracy and per-class F1 versions in the appendix | [two_track_figure.ipynb](src/novelty_eval/figures/two_track_figure.ipynb) |
+| Controlled-change results, plus the soft-accuracy and per-class F1 versions in the appendix | [two_track_figure.ipynb](src/novelty_eval/figures/two_track_figure.ipynb) |
 | Tie rates (figure and table) | [tie_rates_figure.ipynb](src/novelty_eval/figures/tie_rates_figure.ipynb) |
 | Effect of the lower-novelty ideas source | [negatives_source_figure.ipynb](src/novelty_eval/figures/negatives_source_figure.ipynb) |
-| Controlled changes results without verdict aggregation ³ | [sampling_depth_figure.ipynb](src/novelty_eval/figures/sampling_depth_figure.ipynb) |
+| Controlled-change results without verdict aggregation ³ | [sampling_depth_figure.ipynb](src/novelty_eval/figures/sampling_depth_figure.ipynb) |
 
 ³ Derive the single-sample version of every ablation with `derive_subrun_artifacts.py`, then merge with [configs/merge/mec_k1/](src/novelty_eval/ablation/configs/merge/mec_k1/).
 
