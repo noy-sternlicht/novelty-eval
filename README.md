@@ -70,6 +70,14 @@ python3.12 -m venv myenv-baselines
 ./myenv-baselines/bin/pip install -r requirements-baselines.txt
 ```
 
+If you plan to commit changes, register the notebook filter so that running a notebook (outputs, execution counts, kernel metadata) doesn't show up as a change (needs `jq`):
+
+```bash
+git config filter.nbstrip.clean 'jq --indent 1 -f scripts/nbstrip.jq'
+git config filter.nbstrip.smudge cat
+git config filter.nbstrip.required true
+```
+
 ### Setting up API keys
 
 The judges and the benchmark-construction pipeline call external APIs. Keys go in a `secrets.toml` file at the project root (the location `$SECRETS` points at):
