@@ -157,6 +157,11 @@ tracks:
       test_mode: "pairwise"
       test_inputs: "data/ai-only/gpt/pairwise.yaml"
 
+  pairwise-ai-claude:
+    sweep:
+      test_mode: "pairwise"
+      test_inputs: "data/ai-only/claude/pairwise.yaml"
+
 # ---------------------------------------------------------------------------
 # Ablations
 # ---------------------------------------------------------------------------
@@ -168,7 +173,7 @@ ablations:
     description: "Current"
     group: baseline
     legacy_names: [c4, "20260320_133004"]   # c4 = old name for the 4-way ranking baseline
-    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt, pairwise-ai-claude]
 
 
   # --- Evaluation methodology ablations ---
@@ -177,7 +182,7 @@ ablations:
     before_description: "A more specific novelty criterion with concrete guidance."
     group: evaluation
     legacy_names: [c1]
-    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt, pairwise-ai-claude]
 
     sweep:
       novelty_criterion_override: *vague_criterion
@@ -187,7 +192,7 @@ ablations:
     before_description: "Bidirectional evaluation (+ three samples per direction) to reduce position bias."
     group: evaluation
     legacy_names: [c5a]
-    tracks: [pairwise-hvh, pairwise-vanilla-ai, pairwise-ai-gpt]
+    tracks: [pairwise-hvh, pairwise-vanilla-ai, pairwise-ai-gpt, pairwise-ai-claude]
     sweep:
       n_runs: 3
       mec_k: 1
@@ -198,7 +203,7 @@ ablations:
     before_description: "Bidirectional evaluation with mec_k=3 (three samples per direction) to reduce position bias."
     group: evaluation
     legacy_names: [c5b]
-    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt, pairwise-ai-claude]
     sweep:
       mec_k: 1
       bidirectional: true
@@ -208,7 +213,7 @@ ablations:
     before_description: "Judge's reasoning_effort='high'"
     group: evaluation
     legacy_names: []
-    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt, pairwise-ai-claude]
     sweep:
       reasoning_effort: "low"
 
@@ -217,7 +222,7 @@ ablations:
     before_description: "Full judge prompt with detailed evaluation criteria."
     group: evaluation
     legacy_names: []
-    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt]
+    tracks: [pairwise-hvh, pointwise-hvh, pairwise-vanilla-ai, pointwise-vanilla-ai, pairwise-ai-gpt, pairwise-ai-claude]
     sweep:
       pairwise_judge_template: "pairwise_novelty_no_criteria.jinja2"
       pointwise_judge_template: "pointwise_novelty_no_criteria.jinja2"
@@ -228,7 +233,7 @@ ablations:
     description: "AI-researcher judge prompt (novelty framing) --- used as a base for other AI-Researcher variations"
     before_description: ""
     group: evaluation
-    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt]
+    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt, pairwise-ai-claude]
     sweep:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_variation.jinja2"
 
@@ -236,7 +241,7 @@ ablations:
     description: "AI-researcher judge prompt (novelty framing, no conference mention)"
     before_description: "AI-researcher judge prompt that mentions the conference."
     group: evaluation
-    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt ]
+    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt, pairwise-ai-claude ]
     inherit_from: [ai_researcher_base]
     sweep:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_no_conference_mention.jinja2"
@@ -245,7 +250,7 @@ ablations:
     description: "AI-researcher judge prompt (novelty framing, no review mention)"
     before_description: "AI-researcher judge prompt that mentions reviews."
     group: evaluation
-    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt ]
+    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt, pairwise-ai-claude ]
     inherit_from: [ ai_researcher_base ]
     sweep:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_no_review.jinja2"
@@ -254,7 +259,7 @@ ablations:
     description: "AI-researcher judge prompt (novelty framing, comparative)"
     before_description: "AI-researcher judge prompt with non-comparative framing."
     group: evaluation
-    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt ]
+    tracks: [ pairwise-hvh, pairwise-vanilla-ai, pairwise-vanilla-ai-plan, pairwise-hvh-plan, pairwise-ai-gpt, pairwise-ai-claude ]
     inherit_from: [ ai_researcher_base ]
     sweep:
       pairwise_judge_template: "ai_researcher_prompts/pairwise_ai_researcher_comparative.jinja2"
