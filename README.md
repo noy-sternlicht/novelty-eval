@@ -56,7 +56,7 @@ Not well. We present a systematic controlled study of novelty evaluation design 
    export OUTPUT_DIR="$PWD/output"
    ```
 
-The external novelty judges from prior work ([AI-Scientist](https://arxiv.org/abs/2408.06292), [Idea-Novelty-Checker](https://arxiv.org/abs/2506.22026)) follow the implementations released at [simra-shahid/idea_novelty_checker](https://github.com/simra-shahid/idea_novelty_checker). They need a conflicting `transformers` pin and live in a separate environment:
+The external novelty judges from prior work ([AI-Scientist](https://arxiv.org/abs/2408.06292), [Idea-Novelty-Checker](https://arxiv.org/abs/2506.22026)) follow the implementations released with [Idea-Novelty-Checker](https://arxiv.org/abs/2506.22026). They need a conflicting `transformers` pin and live in a separate environment:
 
 ```bash
 python3.12 -m venv myenv-baselines

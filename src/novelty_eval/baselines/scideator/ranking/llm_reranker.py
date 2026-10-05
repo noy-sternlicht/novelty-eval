@@ -3,7 +3,7 @@ This code is taken from RankGPT (https://github.com/sunnweiwei/RankGPT)
 It's optimized to do some calls asynchronously.
 
 Vendored via the Scideator reference implementation
-(https://github.com/simra-shahid/idea_novelty_checker). Modified only to import
+(https://arxiv.org/abs/2506.22026). Modified only to import
 from this package and to route LLM calls through `_shared.llm_adapters`.
 """
 
