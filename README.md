@@ -1,9 +1,6 @@
 # Old Ideas, Novel Problems:<br> The Instability of LLM-Based Novelty Evaluation
 
-[![Arxiv](https://img.shields.io/badge/Arxiv-2610.02022-red?style=flat-square&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2610.02022)
 [![Python Versions](https://img.shields.io/badge/Python-3.12-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](https://noy-sternlicht.github.io/Novelty-Evaluation-Web/)
-[![Data](https://img.shields.io/badge/%F0%9F%A4%97%20Data-Here-yellow?style=flat-square)](https://huggingface.co/datasets/noystl/novelty-judge-bench)
 
 
 <p align="center">
@@ -28,7 +25,6 @@ Not well. We present a systematic controlled study of novelty evaluation design 
   - [Getting started](#getting-started)
     - [Setting up API keys](#setting-up-api-keys)
   - [Novelty Evaluation Data](#novelty-evaluation-data)
-    - [🤗 Hugging Face](#-hugging-face)
     - [Expert Annotation of Judge Errors](#expert-annotation-of-judge-errors)
     - [Automatic Data Collection](#automatic-data-collection)
   - [Judge Evaluation](#judge-evaluation)
@@ -36,15 +32,12 @@ Not well. We present a systematic controlled study of novelty evaluation design 
     - [Controlled study](#controlled-study)
     - [Retrieval's limitations](#retrievals-limitations)
     - [Dedicated novelty judges](#dedicated-novelty-judges)
-  - [Authors](#authors)
-  - [Cite us!](#cite-us)
 <!-- TOC -->
 
 ## Getting started
 
-1. Clone this repository:
+1. Download this repository and enter it:
    ```bash
-   git clone https://github.com/noy-sternlicht/novelty-eval.git
    cd novelty-eval
    ```
 2. Create and activate a virtual environment:
@@ -124,16 +117,6 @@ and in two idea formats:
 * **plan** (`*_plan` configs) — the same ideas normalized into a two-field *purpose* / *mechanism* research plan.
 
 `data/human-plus-generated/backbone-*/` regenerates `D_-` with other ideation backbones (`gpt-5.1`, `gpt-5.4`, `opus-4-5`) and is used in the negatives-source experiment.
-
-### 🤗 Hugging Face
-
-Code in this repo is designed to work with the YAML files in `data`, but we also release the same instances on the Hub: [noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench).
-
-```python
-from datasets import load_dataset
-
-ds = load_dataset("noystl/novelty-judge-bench", "human-plus-generated_pointwise", split="test")
-```
 
 ### Expert Annotation of Judge Errors
 
@@ -217,27 +200,4 @@ python src/novelty_eval/run_benchmark.py --config src/novelty_eval/config/accura
 [cost_efficiency.ipynb](src/novelty_eval/figures/cost_efficiency.ipynb) draws the cost vs. macro-F1 figures and the pointwise results table. Point it at your run directories first.
 
 A file-by-file map of the codebase lives in [src/novelty_eval/README.md](src/novelty_eval/README.md).
-
-## Authors
-
-- [Noy Sternlicht](https://noy-sternlicht.github.io/) — Hebrew University of Jerusalem, Allen Institute for AI
-- [Simra Shahid](https://sites.google.com/view/simra-shahid/home) — Microsoft
-- [Peter Jansen](https://cognitiveai.org/) — Allen Institute for AI, University of Arizona
-- [Daniel S. Weld](https://www.cs.washington.edu/people/faculty/weld/) — Allen Institute for AI, University of Washington
-- [Pao Siangliulue](https://paoponder.com/) — Allen Institute for AI
-- [Tom Hope](https://tomhoper.github.io/) — Hebrew University of Jerusalem, Allen Institute for AI
-
-## Cite us!
-
-```bibtex
-@misc{sternlicht2026oldideasnovelproblems,
-      title={Old Ideas, Novel Problems: The Instability of LLM-Based Novelty Evaluation}, 
-      author={Noy Sternlicht and Simra Shahid and Peter Jansen and Daniel S. Weld and Pao Siangliulue and Tom Hope},
-      year={2026},
-      eprint={2610.02022},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2610.02022}, 
-}
-```
 

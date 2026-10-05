@@ -30,10 +30,6 @@ expert-annotations/
 `_plan` variants hold the same ideas rewritten into a two-field plan (purpose,
 mechanism) and are the idea-format ablation.
 
-### 🤗 Hugging Face
-These files are also released on the Hub as
-[noystl/novelty-judge-bench](https://huggingface.co/datasets/noystl/novelty-judge-bench)
-
 ## Expert annotations
 
 `expert-annotations/judge_errors.csv` has one row per pairwise instance a domain
