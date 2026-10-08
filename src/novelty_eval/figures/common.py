@@ -16,7 +16,6 @@ drawing is shared and only the wording is theirs.
 """
 
 import json
-import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -181,7 +180,7 @@ WHITE_TEXT_BAND = (0.25, 0.82)
 
 # Layout in inches, so a cell is the size it says it is. Every gap on the page
 # is one number here: no layout engine to reverse-engineer when it looks wrong.
-CELL_IN = 0.36                    # height of one ablation row: two lines of cell
+CELL_IN = 0.29                    # height of one ablation row: two lines of cell
                                   # text, the change over the score it landed on
 STRIP_ROWS = 0.56                 # baseline strip height, in rows — shorter than
                                   # a data row, so it reads as a header
@@ -199,7 +198,7 @@ MARGIN_IN = {"left": 1.51,        # room for the row names and the axis title,
                                   # the row under them, near enough the gap the
                                   # title's `pad` leaves above the blocks: the
                                   # grid sits in the same white top and bottom
-             "right": 0.04, "top": 0.25, "bottom": 0.34}
+             "right": 0.04, "top": 0.18, "bottom": 0.34}
 EDGE_IN = 0.04                    # gap kept between the longest name and the
                                   # edge, and what every other edge leaves too:
                                   # the figure is trimmed, not padded, so the
@@ -219,6 +218,8 @@ GROUP_LABEL_PAD = 0.16            # the chip's padding, in units of its font siz
 GROUP_LABEL_ROUND = 0.16          # its corner radius, same units
 GROUP_INSET = 0.10                # rows the bracket stops short of its span, so
                                   # it reads as a span rather than a cell border
+GROUP_LINE_MIN_IN = 0.08          # bracket left visible either side of the chip;
+                                  # a group too short for it is named beside it
 GROUP_COLOUR = "#8a94a6"
 GROUP_LABEL_BG = "#eef1f5"        # the chip behind a group name, as the titles
 LABELPAD_IN = 5 / 72              # the axis title's labelpad, in inches
@@ -486,12 +487,12 @@ class TwoTrackFigure:
                     # The two lines sit close enough to read as one cell: the
                     # row is only just taller than they are, so the gap between
                     # rows has to stay the widest white on the page.
-                    ax.text(j + 0.5, i + 1.34, f"{d:+.1f}{star}", ha="center",
+                    ax.text(j + 0.5, i + 1.31, f"{d:+.1f}{star}", ha="center",
                             va="center", fontsize=6.8,
                             fontweight="bold" if marked else "normal",
                             color=colour)
                     # Italic, so the absolute never reads as a second delta.
-                    ax.text(j + 0.5, i + 1.66, f"({a:.1f})", ha="center",
+                    ax.text(j + 0.5, i + 1.69, f"({a:.1f})", ha="center",
                             va="center", fontsize=5.0,
                             color=colour, alpha=0.72)
 
@@ -502,7 +503,7 @@ class TwoTrackFigure:
             ax.set_yticks(
                 [(strip_top + 1) / 2] + [i + 1.5 for i in range(len(labels))],
                 [self.baseline_label] + labels, fontsize=7)
-            ax.set_title(title, fontsize=8, fontweight="bold", pad=7)
+            ax.set_title(title, fontsize=7.0, fontweight="bold", pad=3.5)
             ax.tick_params(length=0, pad=2)
             for spine in ax.spines.values():
                 spine.set_visible(False)
@@ -519,14 +520,14 @@ class TwoTrackFigure:
 
         # Group names are drawn now and positioned after the figure has been
         # widened, because their width is part of what it must be widened by.
-        # The chip interrupts its own bracket, so a group shorter than its name
-        # would have nothing of the bracket left to read: that group keeps the
-        # bracket and loses the name.
+        # The chip interrupts its own bracket, so a group too short to keep
+        # some line either side of it has its name set beside the bracket
+        # instead, unchipped, and the bracket drawn whole.
         spans = self.group_spans(setup)
-        names = []                   # one per span, None where the group is unnamed
+        names = []                   # (text, beside) per span; text None if unnamed
         for label, i0, i1 in spans:
             if not label:
-                names.append(None)
+                names.append((None, False))
                 continue
             # Set small: the chip hides the bracket behind it, and a short
             # group has to keep enough line either side of the name to read as
@@ -540,19 +541,23 @@ class TwoTrackFigure:
                                        fc=GROUP_LABEL_BG, ec="none"))
             box = t.get_window_extent(fig.canvas.get_renderer())
             chip_in = 2 * GROUP_LABEL_PAD * t.get_fontsize() / 72
-            if (box.height / fig.dpi) + chip_in > (i1 - i0 + 1) * CELL_IN:
-                warnings.warn(f"row group {label!r} is {i1 - i0 + 1} row(s) tall,"
-                              " too short to set its name on: drawing the"
-                              " bracket unnamed.")
-                t.remove()
-                t = None
-            names.append(t)
-        # The chip straddles the bracket, so only its half sticks out past it.
-        halves = [(t.get_window_extent(fig.canvas.get_renderer()).width / fig.dpi
-                   + 2 * GROUP_LABEL_PAD * t.get_fontsize() / 72) / 2
-                  for t in names if t is not None]
+            bracket_in = (i1 - i0 + 1 - 2 * GROUP_INSET) * CELL_IN
+            beside = box.height / fig.dpi + chip_in + 2 * GROUP_LINE_MIN_IN > bracket_in
+            if beside:
+                t.set_bbox(None)
+            names.append((t, beside))
+
+        def name_in(t, beside):
+            """How far a name reaches out past the bracket, in inches."""
+            w = t.get_window_extent(fig.canvas.get_renderer()).width / fig.dpi
+            if beside:
+                return GROUP_TICK_IN + w
+            # The chip straddles the bracket, so only its half sticks out past it.
+            return (w + 2 * GROUP_LABEL_PAD * t.get_fontsize() / 72) / 2
+
+        reach = [name_in(t, beside) for t, beside in names if t is not None]
         group_in = 0.0 if not spans else (
-            GROUP_GAP_IN + GROUP_TICK_IN + max(halves, default=0.0))
+            GROUP_GAP_IN + GROUP_TICK_IN + max(reach, default=0.0))
 
         # The left margin is room for the row names and their brackets, and
         # `MARGIN_IN["left"]` is only the guess the cells were sized against.
@@ -586,13 +591,16 @@ class TwoTrackFigure:
             spine, tick = out(GROUP_GAP_IN + GROUP_TICK_IN), out(GROUP_GAP_IN)
             line = dict(transform=trans, color=GROUP_COLOUR, linewidth=0.8,
                         clip_on=False, solid_capstyle="round", zorder=5)
-            for (_, i0, i1), t in zip(spans, names):
+            for (_, i0, i1), (t, beside) in zip(spans, names):
                 y0, y1 = i0 + 1 + GROUP_INSET, i1 + 2 - GROUP_INSET
                 ax0.plot([spine, spine], [y0, y1], **line)
                 ax0.plot([spine, tick], [y0, y0], **line)
                 ax0.plot([spine, tick], [y1, y1], **line)
                 if t is not None:
-                    t.set_x(spine)          # centred on the line it interrupts
+                    # Centred on the line it interrupts, or just outside it.
+                    w = t.get_window_extent(renderer).width / fig.dpi
+                    t.set_x(out(GROUP_GAP_IN + 2 * GROUP_TICK_IN + w / 2)
+                            if beside else spine)
                     t.set_transform(trans)
             axes[0].yaxis.set_label_coords(out(group_in + LABELPAD_IN), 0.5)
 
