@@ -30,3 +30,4 @@ src/novelty_eval/judge_error_annotation/export_expert_annotations.py
 
 # Local scratch notebooks
 src/novelty_eval/figures/data_analysis.ipynb
+playground/
