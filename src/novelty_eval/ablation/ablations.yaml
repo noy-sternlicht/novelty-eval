@@ -339,6 +339,15 @@ ablations:
     sweep:
       test_inputs: "data/human-plus-generated/backbone-opus-4-5/pairwise.yaml"
 
+  gpt_5_backbone_pairwise_vanilla:
+    description: "GPT-5 backbone"
+    before_description: "Baseline backbone is claude-sonnet-4-5."
+    group: backbone
+    tracks: [ pairwise-vanilla-ai ]
+    suppress_instance_mismatch_warning: true
+    sweep:
+      test_inputs: "data/human-plus-generated/backbone-gpt-5/pairwise.yaml"
+
 
   gpt_5.1_backbone_pointwise_vanilla:
     description: "GPT-5.1 backbone"
@@ -366,6 +375,15 @@ ablations:
     suppress_instance_mismatch_warning: true
     sweep:
       test_inputs: "data/human-plus-generated/backbone-opus-4-5/pointwise.yaml"
+
+  gpt_5_backbone_pointwise_vanilla:
+    description: "GPT-5 backbone"
+    before_description: "Baseline backbone is claude-sonnet-4-5."
+    group: backbone
+    tracks: [ pointwise-vanilla-ai ]
+    suppress_instance_mismatch_warning: true
+    sweep:
+      test_inputs: "data/human-plus-generated/backbone-gpt-5/pointwise.yaml"
 
   gpt_5.1_backbone_retrieval_pairwise_vanilla:
     description: "gpt_5.1_backbone+retrieval"
