@@ -17,6 +17,8 @@ dirs:
   - output/ablation_sweeps/20260531_132457 # gpt-5-1 backbone
   - output/ablation_sweeps/20260531_135654 # gpt-5-4 backbone
   - output/ablation_sweeps/20260531_143138 # opus-4-5 backbone
+  - output/ablation_sweeps/20261007_163147 # gpt-5 backbone (pairwise + pointwise)
+  - output/ablation_sweeps/20261008_062654 # gpt-5 backbone, gpt-5.4 pairwise retry (must stay after the line above: later dirs win)
   - output/ablation_sweeps/20260623_110753 # Retrieval
   - output/ablation_sweeps/20260608_113423 # no criteria prompt
 
@@ -128,9 +130,13 @@ unified_chart:
     title: "GPT-5.4 Backbone"
   - name: opus-4-5_backbone_pairwise_vanilla
     title: "Opus-4-5 Backbone"
+  - name: gpt_5_backbone_pairwise_vanilla
+    title: "GPT-5 Backbone"
   - name: gpt_5.1_backbone_pointwise_vanilla
     title: "GPT-5.1 Backbone"
   - name: gpt_5.4_backbone_pointwise_vanilla
     title: "GPT-5.4 Backbone"
   - name: opus-4-5_backbone_pointwise_vanilla
     title: "Opus-4-5 Backbone"
+  - name: gpt_5_backbone_pointwise_vanilla
+    title: "GPT-5 Backbone"
