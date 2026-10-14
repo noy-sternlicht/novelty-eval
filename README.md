@@ -7,13 +7,13 @@
 
 
 <p align="center">
-  <img src="assets/prompt_sensitivity.gif" alt="Rewording the judge prompt changes GPT-5.4's accuracy" width="100%" />
+  <img src="assets/git-teaser-oct-14.png" alt="Rewording the judge prompt changes GPT-5.4's and Opus 4.6's accuracy" width="100%" />
 </p>
 
 
-Automated ideation systems are often evaluated on the novelty of the ideas they produce, and that judgment is increasingly delegated to large language models. Such judges are typically built ad hoc and validated, if at all, on human-authored papers rather than on the generated ideas they are meant to score. So, how do novelty judges perform?
+AI-based ideation systems are often evaluated on the novelty of their ideas, and that judgment is increasingly delegated to large language models. Such judges are typically built ad hoc and validated, if at all, on human-authored papers rather than on the generated ideas they are meant to score. So, how do novelty judges perform?
 
-Not well. We present a systematic controlled study of novelty evaluation design choices. We first build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
+Not well. We present a systematic controlled study of novelty evaluation design choices. We build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that seemingly small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
 
 
 <!-- <p align="center">
@@ -192,7 +192,6 @@ Merge with [merge_config_hvh.yaml](src/novelty_eval/ablation/configs/merge/merge
 
 | Figure / table | Notebook |
 |---|---|
-| Teaser (Fig. 1) | [motivation_figure.ipynb](src/novelty_eval/figures/motivation_figure.ipynb) |
 | Controlled-change results, plus the soft-accuracy and per-class F1 versions in the appendix | [two_track_figure.ipynb](src/novelty_eval/figures/two_track_figure.ipynb) |
 | Tie rates (figure and table) | [tie_rates_figure.ipynb](src/novelty_eval/figures/tie_rates_figure.ipynb) |
 | Effect of the lower-novelty ideas source | [negatives_source_figure.ipynb](src/novelty_eval/figures/negatives_source_figure.ipynb) |

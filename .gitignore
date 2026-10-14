@@ -31,4 +31,5 @@ scripts/check_api_spend.py
 
 # Local scratch notebooks
 src/novelty_eval/figures/data_analysis.ipynb
+src/novelty_eval/figures/motivation_figure.ipynb
 playground/
