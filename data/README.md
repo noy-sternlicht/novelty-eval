@@ -17,7 +17,8 @@ human-plus-generated/           D_+ unchanged; D_- = ideas from a plain LLM idea
   pointwise.yaml
   pointwise_plan.yaml
 
-  backbone-gpt-5.1/             D_- regenerated with a different ideation backbone
+  backbone-gpt-5/               D_- regenerated with a different ideation backbone
+  backbone-gpt-5.1/
   backbone-gpt-5.4/             
   backbone-opus-4-5/
     pairwise.yaml

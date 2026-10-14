@@ -123,7 +123,7 @@ and in two idea formats:
 * **abstract** (default) — the idea as a free-form abstract.
 * **plan** (`*_plan` configs) — the same ideas normalized into a two-field *purpose* / *mechanism* research plan.
 
-`data/human-plus-generated/backbone-*/` regenerates `D_-` with other ideation backbones (`gpt-5.1`, `gpt-5.4`, `opus-4-5`) and is used in the negatives-source experiment.
+`data/human-plus-generated/backbone-*/` regenerates `D_-` with other ideation backbones (`gpt-5`, `gpt-5.1`, `gpt-5.4`, `opus-4-5`) and is used in the negatives-source experiment.
 
 ### 🤗 Hugging Face
 
@@ -183,7 +183,7 @@ In key and config names, `hvh` is **Human-Only** and `vanilla` is **Human+Genera
 | Reasoning effort = low | `low_judge_reasoning` |
 | Idea format | `convert_to_plan_form_{pairwise,pointwise}_{human,vanilla}` |
 | No verdict aggregation | `mec_k_1` ² |
-| D₋ source | `{gpt_5.1,gpt_5.4,opus-4-5}_backbone_{pairwise,pointwise}_vanilla` |
+| D₋ source | `{gpt_5,gpt_5.1,gpt_5.4,opus-4-5}_backbone_{pairwise,pointwise}_vanilla` |
 
 ¹ Needs a retrieval cache first: [run_retrieve_candidates.sh](src/novelty_eval/retrieval/run_retrieve_candidates.sh) builds it for pairwise, and [flatten_retrieval_cache.py](src/novelty_eval/retrieval/flatten_retrieval_cache.py) derives the pointwise cache from it.<br>
 ² Not a separate run. [derive_subrun_artifacts.py](src/novelty_eval/ablation/derive_subrun_artifacts.py) carves it out of the `current` runs.
