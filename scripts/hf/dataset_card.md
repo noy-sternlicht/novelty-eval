@@ -30,7 +30,7 @@ configs:
 [![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](https://noy-sternlicht.github.io/Novelty-Evaluation-Web/)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/noy-sternlicht/novelty-eval/main/assets/git-teaser-oct-14.png" alt="Rewording the judge prompt changes GPT-5.4's and Opus 4.6's accuracy" width="100%" />
+  <img src="https://raw.githubusercontent.com/noy-sternlicht/novelty-eval/main/assets/fig1-oct14-media.png" alt="Rewording the judge prompt changes GPT-5.4's and Opus 4.6's accuracy" width="100%" />
 </p>
 
 Benchmark instances for the paper

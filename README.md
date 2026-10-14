@@ -7,7 +7,7 @@
 
 
 <p align="center">
-  <img src="assets/git-teaser-oct-14.png" alt="Rewording the judge prompt changes GPT-5.4's and Opus 4.6's accuracy" width="100%" />
+  <img src="assets/fig1-oct14-media.png" alt="Rewording the judge prompt changes GPT-5.4's and Opus 4.6's accuracy" width="100%" />
 </p>
 
 
