@@ -40,6 +40,8 @@ EXPECTED_CONFIGS = {
     "human-plus-generated_pointwise_plan": "human-plus-generated/pointwise_plan.yaml",
     "human-plus-generated_pairwise": "human-plus-generated/pairwise.yaml",
     "human-plus-generated_pairwise_plan": "human-plus-generated/pairwise_plan.yaml",
+    "human-plus-generated_pointwise_backbone-gpt-5": "human-plus-generated/backbone-gpt-5/pointwise.yaml",
+    "human-plus-generated_pairwise_backbone-gpt-5": "human-plus-generated/backbone-gpt-5/pairwise.yaml",
     "human-plus-generated_pointwise_backbone-gpt-5.1": "human-plus-generated/backbone-gpt-5.1/pointwise.yaml",
     "human-plus-generated_pairwise_backbone-gpt-5.1": "human-plus-generated/backbone-gpt-5.1/pairwise.yaml",
     "human-plus-generated_pointwise_backbone-gpt-5.4": "human-plus-generated/backbone-gpt-5.4/pointwise.yaml",
@@ -49,6 +51,10 @@ EXPECTED_CONFIGS = {
 }
 
 DEFAULT_CONFIG = "human-plus-generated_pointwise"
+
+# Stronger-vs-weaker ideator pairs, used only to count verdict flips. They have no
+# gold label, so they stay out of the release.
+UNRELEASED_DIR = "ai-only"
 
 # Never made it past the experimental stage and is empty in every instance, so it is
 # left out of the release rather than shipped half-built.
@@ -225,6 +231,7 @@ def write_card(out_dir: Path, configs: list[str]) -> None:
 
 def resolve_configs(data_dir: Path) -> dict[str, Path]:
     found = {p.relative_to(data_dir).as_posix() for p in data_dir.rglob("*.yaml")}
+    found = {rel for rel in found if not rel.startswith(f"{UNRELEASED_DIR}/")}
     expected = set(EXPECTED_CONFIGS.values())
     assert found == expected, (
         "data/ does not match the manifest in this script — update EXPECTED_CONFIGS.\n"

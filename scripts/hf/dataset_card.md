@@ -30,7 +30,7 @@ configs:
 [![Project Page](https://img.shields.io/badge/Project%20Page-Here-green?style=flat-square&logo=github)](https://noy-sternlicht.github.io/Novelty-Evaluation-Web/)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/noy-sternlicht/novelty-eval/main/assets/prompt_sensitivity.gif" alt="Rewording the judge prompt changes GPT-5.4's accuracy" width="100%" />
+  <img src="https://raw.githubusercontent.com/noy-sternlicht/novelty-eval/main/assets/git-teaser-oct-14.png" alt="Rewording the judge prompt changes GPT-5.4's and Opus 4.6's accuracy" width="100%" />
 </p>
 
 Benchmark instances for the paper
@@ -38,9 +38,9 @@ Benchmark instances for the paper
 Code for running judges on this benchmark and reproducing the paper's experiments is at
 [noy-sternlicht/novelty-eval](https://github.com/noy-sternlicht/novelty-eval).
 
-Automated ideation systems are often evaluated on the novelty of the ideas they produce, and that judgment is increasingly delegated to large language models. Such judges are typically built ad hoc and validated, if at all, on human-authored papers rather than on the generated ideas they are meant to score. So, how do novelty judges perform?
+AI-based ideation systems are often evaluated on the novelty of their ideas, and that judgment is increasingly delegated to large language models. Such judges are typically built ad hoc and validated, if at all, on human-authored papers rather than on the generated ideas they are meant to score. So, how do novelty judges perform?
 
-Not well. We present a systematic controlled study of novelty evaluation design choices. We first build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
+Not well. We present a systematic controlled study of novelty evaluation design choices. We build an evaluation set automatically, mining OpenReview for passages where reviewers explicitly affirm or dispute a paper's originality and keeping only submissions with unanimous agreement at the extremes of their research area; we pair these with ideas from a vanilla LLM generator. Across six judges, we find that seemingly small prompt design choices have large consequences; e.g., simply telling the judge that reviewers found one idea novel and the other not can change its verdict on more than half of the identical idea pairs it is shown, shifting pairwise accuracy by over 50 points and occasionally pushing it below chance. The same change helps one judge and hurts another. Retrieval and larger reasoning budgets help little, and two purpose-built novelty evaluators are outperformed by our cheapest prompted baseline. These results raise questions about reported novelty gains of automated ideation systems, and call for robust novelty evaluation methods.
 
 ## Setups
 
@@ -87,8 +87,8 @@ in the negatives-source experiment.
 | `human-only_pairwise`, `human-only_pairwise_plan` | 154 | Novel idea is `idea_a` in 84 pairs, `idea_b` in 70 |
 | `human-plus-generated_pointwise` (default), `human-plus-generated_pointwise_plan` | 308 | 154 novel, 154 lower-novelty |
 | `human-plus-generated_pairwise`, `human-plus-generated_pairwise_plan` | 154 | Novel idea is `idea_a` in 80 pairs, `idea_b` in 74 |
-| `human-plus-generated_pointwise_backbone-{gpt-5.1,gpt-5.4,opus-4-5}` | 308 each | As above, with `D_-` from GPT-5.1, GPT-5.4, or Claude Opus 4.5 |
-| `human-plus-generated_pairwise_backbone-{gpt-5.1,gpt-5.4,opus-4-5}` | 154 each | As above, with `D_-` from GPT-5.1, GPT-5.4, or Claude Opus 4.5 |
+| `human-plus-generated_pointwise_backbone-{gpt-5,gpt-5.1,gpt-5.4,opus-4-5}` | 308 each | As above, with `D_-` from GPT-5, GPT-5.1, GPT-5.4, or Claude Opus 4.5 |
+| `human-plus-generated_pairwise_backbone-{gpt-5,gpt-5.1,gpt-5.4,opus-4-5}` | 154 each | As above, with `D_-` from GPT-5, GPT-5.1, GPT-5.4, or Claude Opus 4.5 |
 
 All configs have a single `test` split.
 
